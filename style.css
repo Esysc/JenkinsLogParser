@@ -1,0 +1,837 @@
+@import url("fonts.css");
+
+html {
+    /*    height: 100%;
+        overflow: hidden!important; */
+}
+
+body {
+    /*padding: 0px;*/
+    /* margin: 0 0 100px;*/
+    font: 14px 'open_sanscondensed_light', Helvetica, Arial, sans-serif;
+    height: 100%;
+    overflow: auto!important;
+    padding-top:50px;
+}
+
+/*
+* Stiky header
+*/
+
+
+.header {
+    position: fixed!important;
+    top: 0px;
+    z-index: 10;
+    height:50px;
+}
+/*
+* Sticky Footer
+*/
+.footer {
+    padding-left:15px;
+    padding-right:15px;
+    height:50px;
+    text-align:center;
+    color:white;
+    width:100vw;
+    vertical-align:middle;
+    position: absolute!important;
+    margin-bottom: 65px;
+    z-index: 10;
+}
+.full-size {
+    height: 100%;
+    width: 100%;
+    padding-bottom: 50px;
+}
+
+.carbon-background {
+    background-image: url(../../images/pattern-b8gl.png);
+    background-repeat: repeat;
+}
+
+.clear {
+    clear: both;
+}
+
+.rowDashboard {
+    display: flex;
+    flex-wrap: wrap;
+}
+.rowDashboard > [class*='col-'] {
+    display: flex;
+    flex-direction: column;
+}
+
+
+@keyframes blink {
+    0% {
+        background-color: #000000;
+    }
+    50% {
+        background-color: #00000A;
+    }
+    100% {
+        background-color: #00000f;
+    }
+}
+@-webkit-keyframes blink {
+    0% {
+        background-color: #000000;
+    }
+    50% {
+        background-color: #00000A;
+    }
+    100% {
+        background-color: #00000f;
+    }
+}
+/*
+* Blink class
+*/
+
+.blink_me {
+    animation: blinker 2s linear infinite;
+    cursor:pointer;
+}
+
+@keyframes blinker {  
+    50% { opacity: 0; }
+}
+
+.status-warning {
+    background:#d9534f;
+    width: 14px;
+    height: 14px;
+    border-radius: 8px;
+    box-shadow: 0px 0px 1px #666;
+    border: 8px solid #d9534f;
+}
+
+div.sameline {
+    vertical-align: bottom;
+}
+span.first {
+    float: left; width: 34%; text-align: center;
+}
+span.second {
+    float: left; width: 33%; text-align: center;
+}
+span.third {
+    float: left; width: 33%; text-align: center;
+}
+td span.btn{float:left; width:33%; min-width:33%;}
+.container1{
+    overflow: auto
+}
+.container2{
+    margin-top: 2%;
+    overflow: auto
+}
+
+
+/*
+* Jenkins service slave 
+*/
+
+span.offline {
+    width: 35px; height: 35px; background-image: url('img/jenkinsOff.png'); display:block;background-size: cover;
+}
+
+span.online {
+
+    /*commented out because we don't display icons if online, only alert if offline */
+
+    /*  width: 35px; height: 35px; background-image: url('img/jenkinsOn.png'); display:block;background-size: cover;*/
+}
+
+a.jenkins:hover {
+    width: 35px; height: 35px; background-image: url('img/jenkinsOn.png');background-repeat: no-repeat;background-position:100%  ;display:block;background-size: cover; z-index: 100000;
+    opacity: 1.5;
+}
+
+/*
+* Cut too long words.....
+*/
+
+.crop {width:90%; white-space:nowrap; overflow:hidden;text-overflow:ellipsis}
+
+/*
+* Fix the spaces in span showdetail
+*/
+.dashboard {
+    background-color: transparent!important; 
+    display: table;
+    text-align:center;
+    cursor:pointer;
+    font-weight: bold;
+    width:100%; text-align:center;border-radius:5px;cursor:pointer;
+    font-family: 'open_sans_condensedbold';
+}
+.showdetail:not(.dashboard) {
+    background-color: transparent!important;
+    display: table;
+    width:100%; text-align:center;border-radius:5px;cursor:pointer;
+    font-family: 'open_sans_condensedbold';
+    font-weight: bold;
+    font-size: 25pt;
+    height:40px
+}
+.showdetail > .multijobname{
+
+    display: table-cell;
+    height:100%;
+    padding-top: 0;
+    width:50%;
+}
+.showdetail > .multijobcounter{
+    vertical-align: middle;
+    display: table-cell;
+    width:50%;
+
+}
+
+/*
+* Tooltip options
+*/
+
+/*.tooltip {
+    font-size: 20px!important;
+    width:500px;
+}
+.tooltip .tooltip-inner {
+    min-width: 400px;
+} */
+
+/*
+* Search field
+*/
+
+.container-4{
+    overflow: hidden;
+    width: 300px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.container-4 input#search{
+    width: 300px;
+    background: #2b303b;
+    border: none;
+    float: left;
+    color: #fff;
+    padding-left: 15px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.container-4 input#search::-webkit-input-placeholder {
+    color: #65737e;
+}
+
+.container-4 input#search:-moz-placeholder { /* Firefox 18- */
+    color: #65737e;  
+}
+
+.container-4 input#search::-moz-placeholder {  /* Firefox 19+ */
+    color: #65737e;  
+}
+
+.container-4 input#search:-ms-input-placeholder {  
+    color: #65737e;  
+}
+
+.container-4 button.icon{
+    -webkit-border-top-right-radius: 5px;
+    -webkit-border-bottom-right-radius: 5px;
+    -moz-border-radius-topright: 5px;
+    -moz-border-radius-bottomright: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+
+    border: none;
+    background: #232833;
+    height: 50px;
+    width: 50px;
+    color: #4f5b66;
+    opacity: 0;
+    font-size: 10pt;
+
+    -webkit-transition: all .55s ease;
+    -moz-transition: all .55s ease;
+    -ms-transition: all .55s ease;
+    -o-transition: all .55s ease;
+    transition: all .55s ease;
+}
+
+.container-4:hover button.icon, .container-4:active button.icon, .container-4:focus button.icon{
+    outline: none;
+    opacity: 1;
+    margin-left: -50px;
+}
+
+.container-4:hover button.icon:hover{
+    background: white;
+}
+/*
+* Table comaparator
+*/
+
+
+table.tableComparator {
+    background-color: #3D3D3D;
+    vertical-align: middle!important;
+    max-width: 400px!important;
+    min-width: 400px!important;
+    border-radius: 30px!important;
+    padding-top:300px;
+}
+
+
+table.tableComparator > thead > tr > th {
+    border-radius: 30px!important;
+    vertical-align: middle!important;
+    max-width: 400px!important;
+    min-width: 400px!important;
+    color: white;
+}
+table.tableComparator > tbody > tr > th {
+    border-radius: 30px!important;
+    vertical-align: middle!important;
+    max-width: 400px!important;
+    min-width: 400px!important;
+    color:white;
+}
+
+table.tableComparator > tbody > tr > th {
+    text-align: center!important;
+}
+table.tableComparator > thead > tr > th {
+    text-align: center!important;
+}
+table.tableComparator > tbody > tr > td {
+    border-radius: 30px!important;
+    text-align: center!important;
+    vertical-align:top;
+    min-width: 400px;
+    color: white;
+    font-size:large;
+}
+table.tableComparator > tbody > tr > td > div{
+    border-radius: 30px!important;
+    text-align: center!important;
+    vertical-align:top;
+    min-width: 400px;
+    color: white;
+    font-size:large;
+}
+.analyze {
+    margin: 0 auto;
+    padding-top: 100px;padding-bottom:100px;
+}
+
+.data-comparator{width:inherit;height:inherit; overflow-x: scroll; overflow-y:scroll; }
+
+/*
+* Table slaves nodes
+*/
+
+table.table.tableComparatorSlave {
+    background-color: #3D3D3D;
+    text-align: center!important;
+    vertical-align: middle!important;
+    max-width: 100%!important;
+    min-width: 100%!important;
+    margin: auto;
+    border-collapse: collapse!important;
+    overflow-x: auto!important;
+
+    width: fit-content!important;
+
+}
+
+table.tableComparatorSlave > thead > tr > th{
+    border-radius: 30px!important;
+    text-align: center!important;
+    vertical-align: middle!important;
+    max-width: 100%!important;
+    min-width: 100%!important;
+    color: white;
+
+}
+.tableInner {
+    text-align: center!important;
+    vertical-align: middle!important;
+    max-width: 100%!important;
+    min-width: 100%!important;
+    color:white;
+}
+td.divs {
+    vertical-align: top!important;
+
+}
+table.tableComparatorSlave > tbody > tr > td {
+    vertical-align:middle;
+    min-width: 100%;
+    color: white;
+    /*  font-size:large; */
+}
+.data-table{width:inherit; overflow-x: auto; overflow-y:hidden; }
+
+
+
+/*
+* Show a "return-to-top" link when wide scrolling bottom
+*/
+
+.return-to-top {
+    position: fixed!important;
+    bottom: 40px!important;
+    right: 40px!important;
+    background: rgba(0, 0, 0, 0.7)!important;
+    width: 50px!important;
+    height: 50px!important;
+    text-decoration: none!important;
+    -webkit-border-radius: 35px!important;
+    -moz-border-radius: 35px!important;
+    border-radius: 35px!important;
+    display: none!important;
+    -webkit-transition: all 0.3s linear!important;
+    -moz-transition: all 0.3s ease!important;
+    -ms-transition: all 0.3s ease!important;
+    -o-transition: all 0.3s ease!important;
+    transition: all 0.3s ease!important;
+}
+.return-to-top span {
+    color: #fff!important;
+    margin: 0!important;
+    position: relative!important;
+    left: 16px!important;
+    top: 13px!important;
+    font-size: 19px!important;
+    -webkit-transition: all 0.3s ease!important;
+    -moz-transition: all 0.3s ease!important;
+    -ms-transition: all 0.3s ease!important;
+    -o-transition: all 0.3s ease!important;
+    transition: all 0.3s ease!important;
+}
+.return-to-top:hover {
+    background: rgba(0, 0, 0, 0.9)!important;
+}
+.return-to-top:hover i {
+    color: #fff!important;
+    top: 5px!important;
+}
+
+#panLeft {
+    position: fixed;
+    top: 45%;
+    left: 30px;
+    background: rgba(0, 0, 0, 0.7);
+    width: 50px;
+    height: 50px;
+    display: block;
+    text-decoration: none;
+    -webkit-border-radius: 35px;
+    -moz-border-radius: 35px;
+    border-radius: 35px;
+    -webkit-transition: all 0.3s linear;
+    -moz-transition: all 0.3s ease;
+    -ms-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+#panLeft i {
+    color: #fff;
+    margin: 0;
+    position: relative;
+    left: 13px;
+    top:13px;
+    font-size: 19px;
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -ms-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+}
+#panLeft:hover {
+    background: rgba(0, 0, 0, 0.9);
+}
+#panLeft:hover i {
+    color: #fff;
+    left: 5px;
+}
+
+#panRight {
+    position: fixed;
+    top: 45%;
+    right: 30px;
+    background: rgba(0, 0, 0, 0.7);
+    width: 50px;
+    height: 50px;
+    display: block;
+    text-decoration: none;
+    -webkit-border-radius: 35px;
+    -moz-border-radius: 35px;
+    border-radius: 35px;
+    -webkit-transition: all 0.3s linear;
+    -moz-transition: all 0.3s ease;
+    -ms-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+}
+#panRight i {
+    color: #fff;
+    margin: 0;
+    position: relative;
+    left: 13px;
+    top: 13px;
+    font-size: 19px;
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -ms-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+}
+#panRight:hover {
+    background: rgba(0, 0, 0, 0.9);
+}
+#panRight:hover i {
+    color: #fff;
+    left: 21px;
+}
+
+
+/*
+* Dropdown menu
+*/
+.topnav {
+  overflow: hidden;
+  background-color: #333;
+}
+
+.topnav a {
+  float: left;
+  display: block;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.topnav .icon {
+  display: none;
+}
+span.testline {
+	font-weight:bold;
+}
+.dropdown {
+  float: left;
+  overflow: hidden;
+}
+
+.dropdown .dropbtn {
+  font-size: 17px;    
+  border: none;
+  outline: none;
+  color: white;
+  padding: 14px 16px;
+  overflow-y:auto!important;
+  background-color: inherit;
+  font-family: inherit;
+  margin: 0;
+}
+
+.dropdown-mycontent {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  max-height:400px;
+  overflow-y:auto;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-mycontent button  {
+  float: none;
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+  width:100%; 
+}
+.dropdown-mycontent a  {
+	font-size: 0.8em!important;  
+	width:100%;
+}
+.dropdown-mycontent a:hover  {
+	color: white;
+}
+.topnav a:hover, .dropdown:hover .dropbtn {
+  background-color: #555;
+  color: white;
+}
+
+.dropdown-mycontent button:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.dropdown:hover .dropdown-mycontent {
+  display: block;
+}
+button.download {
+	float:right!important;
+	border: 0;
+  border-radius: 0.25rem;
+  background: #1E88E5;
+  color: white;
+  font-family: system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  margin: 0.25rem;
+  cursor: pointer;
+}
+div.spinner-grow {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    vertical-align: text-bottom;
+    background-color: currentColor;
+    border-radius: 50%;
+    opacity: 0;
+    -webkit-animation: spinner-grow .75s linear infinite;
+    animation: spinner-grow .75s linear infinite;
+@media screen and (max-width: 600px) {
+  .topnav a:not(:first-child), .dropdown .dropbtn {
+    display: none;
+  }
+  .topnav a.icon {
+    float: right;
+    display: block;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .topnav.responsive {position: relative;}
+  .topnav.responsive .icon {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .topnav.responsive a {
+    float: none;
+    display: block;
+    text-align: left;
+  }
+  .topnav.responsive .dropdown {float: none;}
+  .topnav.responsive .dropdown-mycontent {position: relative;}
+  .topnav.responsive .dropdown .dropbtn {
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+}
+/*
+migrating same style from javascript to here
+*/
+
+.testcases {
+    padding-left: 20%;
+    width:90%;
+    border-radius: 20px;
+    border: solid 1px;
+    font-size:0.8em;
+    word-wrap:break-word; 
+    display:inline-block;
+}
+.testsuites {
+    padding-left: 20%;
+    color:white;
+}
+.testsuitesspans {
+    display: block;
+}
+span.firstTs {
+    margin-left: 10%; width: 20%; text-align: center;
+}
+span.secondTs {
+    margin-left:  10%;width: 20%; text-align: center;
+}
+span.thirdTs {
+    margin-top:2%;margin-right:10%;width: 20%; text-align: center;
+
+}
+.label-as-badge {
+    border-radius: 3em;
+}
+#issues {
+    overflow-y:auto;
+    height: 60%;
+}
+.progress-fake {
+    text-align:center;
+    color:white;
+    font-weight: bold;
+    width:60%;
+    min-width:60%;
+    height:90%;
+    border-radius: 5px;
+    font-size: 0.7em;
+    padding-left:6em;
+}
+
+.col1, .col2, .box7, .box11 {
+    float:left;
+}
+.col1 {
+    width:20%;
+    height:100%;
+}
+.col1 > div {
+    width:100%;
+    height:25%;
+}
+.col2 {
+    width: 65%;
+    height:100%;
+}
+.box6 {
+    float:right;
+    width: 47.5%;
+    height:65%;
+
+}
+.box5, .box8 {
+    width:52.5%;
+}
+.box5 {
+    height:30%;
+
+}
+.box8 {
+    height:35%;
+
+}
+.box9 {
+    height:15%;
+
+}
+.box10 {
+    height:20%;
+
+}
+.box7, .box11 {
+    width:15%;
+
+}
+.box7 {
+    height:90%;
+
+}
+.box11 {
+    height:10%;
+
+}
+
+.navbar-center {
+    position: absolute!important;
+    left: 50%;
+    bottom:0.5vh;
+    transform: translatex(-50%);
+}
+
+/*
+* Modal full screen
+*/
+/*modal fullscreen */
+
+.modal.modal-fullscreen {
+    /* Maximize the main wrappers on the screen */
+    /* Make the parent wrapper of the modal box a full-width block */
+    /* Remove borders and effects on the content */
+    /**
+           * /!\ By using this feature, you force the header and footer to be placed
+           * in an absolute position. You must handle by yourself the margin of the
+           * content.
+           */
+}
+.modal.modal-fullscreen .modal-dialog,
+.modal.modal-fullscreen .modal-content {
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+.modal.modal-fullscreen .modal-dialog {
+    margin: 0;
+    width: 100%;
+    animation-duration:0.6s;
+}
+.modal.modal-fullscreen .modal-content {
+    border: none;
+    -moz-border-radius: 0;
+    border-radius: 0;
+    -webkit-box-shadow: inherit;
+    -moz-box-shadow: inherit;
+    -o-box-shadow: inherit;
+    box-shadow: inherit;
+    /* change bg color below */
+    /* background:#1abc9c; */
+}
+.modal.modal-fullscreen .modal-body {
+    overflow-y:auto!important;
+    max-height:90vh;
+}
+.close {
+    color: #fff!important; 
+    opacity: 1.0!important;
+    float:left!important;
+}
+
+.imageSpin
+{
+    -webkit-animation: spin1 1s infinite linear;
+    -moz-animation: spin1 1s infinite linear;
+    -o-animation: spin1 1s infinite linear;
+    -ms-animation: spin1 1s infinite linear;
+    animation: spin1 1s infinite linear;
+
+    z-index:4;
+}
+
+@-webkit-keyframes spin1 {
+    0% { -webkit-transform: rotate(0deg);}
+    100% { -webkit-transform: rotate(360deg);}
+}
+@-moz-keyframes spin1 {
+    0% { -moz-transform: rotate(0deg);}
+    100% { -moz-transform: rotate(360deg);}
+}
+@-o-keyframes spin1 {
+    0% { -o-transform: rotate(0deg);}
+    100% { -o-transform: rotate(360deg);}
+}
+@-ms-keyframes spin1 {
+    0% { -ms-transform: rotate(0deg);}
+    100% { -ms-transform: rotate(360deg);}
+}
+@-keyframes spin1 {
+    0% { transform: rotate(0deg);}
+    100% { transform: rotate(360deg);}
+} 

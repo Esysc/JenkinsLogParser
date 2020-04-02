@@ -1,0 +1,14 @@
+{
+  "manifest_version": 2,
+ 
+  "name": "Log Parser for Jenkins",
+  "version": "0.1.0",
+  "description": "Try to get a better console interface",
+  "permissions": ["contextMenus", "downloads", "storage", "notifications", "activeTab", "nativeMessaging"],
+  "content_scripts": [{
+    "css": ["style.css"],
+    "js": ["jquery.js", "magic.js"],
+	"run_at" : "document_idle",
+    "matches": ["http://*/*/*/*/console*"]
+  }]
+}
