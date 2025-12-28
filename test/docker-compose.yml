@@ -10,8 +10,8 @@ services:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
     volumes:
       - jenkins_home:/var/jenkins_home
-      - ./jenkins-config/jobs:/var/jenkins_home/jobs
-      - ./jenkins-config/init.groovy.d:/var/jenkins_home/init.groovy.d
+      - ./jenkins-config/init.groovy.d:/var/jenkins_home/init.groovy.d:ro
+      - ./jenkins-config/jobs:/tmp/jenkins-jobs:ro
 
 volumes:
   jenkins_home:
