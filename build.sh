@@ -113,6 +113,25 @@ if [[ ! $REPLY =~ ^[Nn]$ ]]; then
     echo -e "${GREEN}✓ Pushed tag ${TAG_NAME} to origin${NC}"
 fi
 
+# Upload zip as GitHub release
+if command -v gh >/dev/null 2>&1; then
+    echo ""
+    read -p "Do you want to upload the zip as a GitHub release? (Y/n): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+        # Try to create the release, or upload asset if it exists
+        if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists. Uploading asset..."
+            gh release upload "$TAG_NAME" "$ZIP_FILE" --clobber
+        else
+            gh release create "$TAG_NAME" "$ZIP_FILE" --title "$TAG_NAME" --notes "$CHANGELOG" --latest --prerelease=false
+        fi
+        echo -e "${GREEN}✓ Uploaded release to GitHub${NC}"
+    fi
+else
+    echo "GitHub CLI (gh) not found. Skipping release upload."
+fi
+
 echo ""
 echo "================================================"
 echo -e "${GREEN}Build complete!${NC}"

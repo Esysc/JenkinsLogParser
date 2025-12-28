@@ -40,7 +40,7 @@ Four pre-configured jobs are available:
 ## Testing the Extension
 
 1. Load the extension in Chrome (`chrome://extensions/`)
-2. Open Jenkins: http://localhost:8080
+2. Open Jenkins: <http://localhost:8080>
 3. Click on a job → Build Now
 4. Click "Console Output"
 5. The extension should activate and colorize the logs
@@ -54,8 +54,8 @@ Four pre-configured jobs are available:
 
 ## Useful URLs
 
--   Jenkins home: http://localhost:8080
--   Sample job console: http://localhost:8080/job/sample-test-job/lastBuild/console
+-   Jenkins home: <http://localhost:8080>
+-   Sample job console: <http://localhost:8080/job/sample-test-job/lastBuild/console>
 
 ## Commands
 
