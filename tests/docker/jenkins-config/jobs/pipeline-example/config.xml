@@ -1,0 +1,119 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job">
+  <description>Example Pipeline job with multiple stages</description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+    <script><![CDATA[
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '[INFO] Starting checkout stage...'
+                echo '[DEBUG] Cloning repository'
+                echo '[INFO] Repository cloned successfully'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo '[INFO] ============================================'
+                echo 'Starting TestCase: CompileSourceCode'
+                echo '[INFO] ============================================'
+                echo '[INFO] Compiling source files...'
+                echo '[DEBUG] javac -d build src/*.java'
+                echo '[INFO] Compiled 42 source files'
+                echo 'SUMMARY of TestCase [CompileSourceCode]: PASSED'
+
+                echo ''
+                echo '[INFO] ============================================'
+                echo 'Starting TestCase: PackageArtifacts'
+                echo '[INFO] ============================================'
+                echo '[INFO] Creating JAR file...'
+                echo '[DEBUG] jar cvf app.jar -C build .'
+                echo '[INFO] Package created: app.jar (2.3 MB)'
+                echo 'SUMMARY of TestCase [PackageArtifacts]: PASSED'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo '[INFO] ============================================'
+                echo 'Starting TestCase: UnitTests'
+                echo '[INFO] ============================================'
+                echo '[INFO] Running unit tests...'
+                echo '[DEBUG] Using JUnit 5.9.0'
+                echo '[INFO] Test: UserServiceTest - PASSED'
+                echo '[INFO] Test: OrderServiceTest - PASSED'
+                echo '[WARN] Test: PaymentServiceTest - Slow (2.3s)'
+                echo '[INFO] Test: AuthServiceTest - PASSED'
+                echo '[INFO] 4 tests passed, 0 failed'
+                echo 'SUMMARY of TestCase [UnitTests]: PASSED'
+
+                echo ''
+                echo '[INFO] ============================================'
+                echo 'Starting TestCase: IntegrationTests'
+                echo '[INFO] ============================================'
+                echo '[INFO] Running integration tests...'
+                echo '[DEBUG] Starting embedded database'
+                echo '[INFO] Test: DatabaseConnectionTest - PASSED'
+                echo '[ERROR] Test: ExternalAPITest - Connection timeout'
+                echo '[ERROR] Expected response in 5000ms, got timeout'
+                echo '[INFO] 1 test passed, 1 failed'
+                echo 'SUMMARY of TestCase [IntegrationTests]: ERROR'
+            }
+        }
+
+        stage('Code Analysis') {
+            steps {
+                echo '[INFO] ============================================'
+                echo 'Starting TestCase: StaticAnalysis'
+                echo '[INFO] ============================================'
+                echo '[INFO] Running static code analysis...'
+                echo '[DEBUG] Checkstyle: 0 errors, 3 warnings'
+                echo '[WARN] Line too long in UserService.java:142'
+                echo '[WARN] Missing Javadoc in OrderController.java'
+                echo '[WARN] Unused import in PaymentGateway.java'
+                echo '[DEBUG] SpotBugs: 0 bugs found'
+                echo '[INFO] Code quality: GOOD'
+                echo 'SUMMARY of TestCase [StaticAnalysis]: PASSED'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo '[INFO] ============================================'
+                echo 'Starting TestCase: DeployToStaging'
+                echo '[INFO] ============================================'
+                echo '[INFO] Deploying to staging environment...'
+                echo '[DEBUG] Uploading artifacts to server'
+                echo '[INFO] Artifact uploaded successfully'
+                echo '[DEBUG] Restarting application server'
+                echo '[INFO] Application started on port 8080'
+                echo '[INFO] Health check: OK'
+                echo 'SUMMARY of TestCase [DeployToStaging]: PASSED'
+            }
+        }
+    }
+
+    post {
+        always {
+            echo ''
+            echo '[INFO] ============================================'
+            echo '[INFO] Pipeline Summary'
+            echo '[INFO] ============================================'
+            echo '[INFO] Total stages: 5'
+            echo '[INFO] Passed: 4'
+            echo '[ERROR] Failed: 1 (IntegrationTests)'
+            echo '[WARN] Some tests showed performance warnings'
+        }
+    }
+}
+]]></script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

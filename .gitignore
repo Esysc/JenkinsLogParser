@@ -30,6 +30,7 @@ yarn.lock
 # Test artifacts
 test/*.log
 test/jenkins_home/
+coverage/
 
 # Docker
 docker-compose.override.yml
