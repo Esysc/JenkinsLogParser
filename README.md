@@ -121,3 +121,17 @@ For end-to-end testing with a real Jenkins instance, see [tests/docker/README.md
 ### v0.1.0
 
 -   Initial release
+
+## Privacy Policy
+
+**Log Parser for Jenkins** respects your privacy:
+
+-   ✅ **No data collection** - This extension does not collect, store, or transmit any personal data
+-   ✅ **No analytics** - No tracking or usage analytics
+-   ✅ **No external connections** - All processing happens locally in your browser
+-   ✅ **No remote code** - All code is bundled within the extension
+-   ✅ **Minimal permissions** - Only uses `activeTab` to access Jenkins console pages when you visit them
+
+The extension only reads the Jenkins console output on the current page to colorize and enhance the log display. No data ever leaves your browser.
+
+**Contact:** For questions about this privacy policy, please open an issue on the [GitHub repository](https://github.com/Esysc/JenkinsLogParser/issues).
