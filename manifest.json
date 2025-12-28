@@ -16,8 +16,7 @@
                 "http://*/*/consoleFull*",
                 "https://*/*/consoleFull*",
                 "http://*/*/flowGraphTable/*",
-                "https://*/*/flowGraphTable/*",
-                "http://localhost:*/test/*"
+                "https://*/*/flowGraphTable/*"
             ]
         }
     ]
