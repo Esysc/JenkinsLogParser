@@ -62,6 +62,30 @@ Works on both HTTP and HTTPS Jenkins instances.
 3. Enable "Developer mode" (toggle in top right)
 4. Click "Load unpacked" and select the extension folder
 
+## Testing
+
+### Automated Tests (Jest)
+
+The project includes a comprehensive Jest test suite covering utility functions and integration tests.
+
+```bash
+# Install dependencies
+npm install
+
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+### Manual E2E Testing (Optional)
+
+For end-to-end testing with a real Jenkins instance, see [tests/docker/README.md](tests/docker/README.md).
+
 ## Notes
 
 -   Uses **Manifest V3** (Chrome's latest extension format)

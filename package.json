@@ -1,0 +1,36 @@
+{
+    "name": "jenkins-log-parser",
+    "version": "0.3.0",
+    "description": "Chrome extension to parse Jenkins console logs with enhanced readability",
+    "scripts": {
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
+        "lint": "eslint magic.js",
+        "build": "./build.sh"
+    },
+    "devDependencies": {
+        "jest": "^29.7.0",
+        "jest-environment-jsdom": "^29.7.0",
+        "eslint": "^8.56.0"
+    },
+    "jest": {
+        "testEnvironment": "jsdom",
+        "roots": [
+            "<rootDir>/tests"
+        ],
+        "testMatch": [
+            "**/*.test.js"
+        ],
+        "collectCoverageFrom": [
+            "magic.js",
+            "log-parser-utils.js"
+        ],
+        "coverageDirectory": "coverage",
+        "coverageReporters": [
+            "text",
+            "lcov",
+            "html"
+        ]
+    }
+}

@@ -1,6 +1,14 @@
-# Test Environment
+# Docker E2E Testing (Optional)
 
-This directory contains testing resources for the Log Parser extension.
+This directory provides an optional Docker-based Jenkins environment for manual end-to-end testing.
+
+> **Note:** The main test suite uses Jest and doesn't require Docker. Run `npm test` from the project root for automated testing.
+
+## When to Use This
+
+-   Manual verification of the extension in a real browser
+-   Visual testing of UI features
+-   Testing against actual Jenkins log output
 
 ## Docker Jenkins Setup
 
@@ -9,7 +17,7 @@ A Docker setup for testing with a real Jenkins instance.
 ### Quick Start
 
 ```bash
-cd test
+cd tests/docker
 
 # Start Jenkins
 docker compose up -d
