@@ -1,0 +1,55 @@
+# Build output
+dist/
+*.zip
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# Node modules
+node_modules/
+package-lock.json
+yarn.lock
+
+# Test artifacts
+test/*.log
+test/jenkins_home/
+
+# Docker
+docker-compose.override.yml
+*.log
+
+# Pre-commit
+.pre-commit-cache/
+
+# Python (if using for scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.egg-info/
+.eggs/
+venv/
+.env
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup

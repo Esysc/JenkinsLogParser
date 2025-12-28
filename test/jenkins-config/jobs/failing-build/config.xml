@@ -1,0 +1,61 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <description>A build with many failures for testing error display</description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+echo "[INFO] Starting failing build..."
+echo "[WARN] Low disk space detected"
+echo "[ERROR] Configuration file missing!"
+sleep 1
+
+echo ""
+echo "Starting TestCase: DatabaseConnectionTest"
+echo "[INFO] Running DatabaseConnectionTest..."
+echo "[ERROR] Cannot connect to database"
+echo "[ERROR] Connection timeout after 10s"
+echo "[ERROR] Host: db.example.com:5432"
+echo "SUMMARY of TestCase [DatabaseConnectionTest]: ERROR"
+
+echo ""
+echo "Starting TestCase: CacheTest"
+echo "[INFO] Running CacheTest..."
+echo "[ERROR] Redis connection refused"
+echo "[ERROR] Cache initialization failed"
+echo "SUMMARY of TestCase [CacheTest]: ERROR"
+
+echo ""
+echo "Starting TestCase: FileSystemTest"
+echo "[INFO] Running FileSystemTest..."
+echo "[ERROR] Permission denied: /var/data/uploads"
+echo "[ERROR] Cannot create temp directory"
+echo "SUMMARY of TestCase [FileSystemTest]: ERROR"
+
+echo ""
+echo "Starting TestCase: MemoryLeakTest"
+echo "[INFO] Running MemoryLeakTest..."
+echo "[WARN] High memory usage detected"
+echo "[ERROR] OutOfMemoryError: Java heap space"
+echo "[ERROR] Test aborted"
+echo "SUMMARY of TestCase [MemoryLeakTest]: ERROR"
+
+echo ""
+echo "[ERROR] BUILD FAILED"
+echo "[ERROR] 4 tests failed out of 4"
+exit 1
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

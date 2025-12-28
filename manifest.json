@@ -10,7 +10,11 @@
             "css": ["style.css"],
             "js": ["magic.js"],
             "run_at": "document_idle",
-            "matches": ["http://*/*/*/*/console*", "https://*/*/*/*/console*"]
+            "matches": [
+                "http://*/*/*/*/console*",
+                "https://*/*/*/*/console*",
+                "http://localhost:*/test/*"
+            ]
         }
     ]
 }

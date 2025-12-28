@@ -1,0 +1,126 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <description>A sample test job with multiple test cases</description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+
+echo "[INFO] Starting build process..."
+echo "[INFO] Checking environment..."
+echo "[DEBUG] JAVA_HOME=$JAVA_HOME"
+echo "[DEBUG] PATH=$PATH"
+sleep 1
+
+echo ""
+echo "[INFO] ============================================"
+echo "Starting TestCase: LoginTest"
+echo "[INFO] ============================================"
+echo "[INFO] Initializing test environment..."
+echo "[DEBUG] Loading test configuration"
+echo "[INFO] Running LoginTest..."
+echo "[INFO] Step 1: Navigate to login page"
+echo "[INFO] Step 2: Enter username"
+echo "[INFO] Step 3: Enter password"
+echo "[INFO] Step 4: Click submit"
+echo "[INFO] Step 5: Verify dashboard loaded"
+echo "[INFO] LoginTest completed successfully"
+echo "SUMMARY of TestCase [LoginTest]: PASSED"
+sleep 1
+
+echo ""
+echo "[INFO] ============================================"
+echo "Starting TestCase: UserRegistrationTest"
+echo "[INFO] ============================================"
+echo "[INFO] Running UserRegistrationTest..."
+echo "[DEBUG] Generating random user data"
+echo "[INFO] Step 1: Navigate to registration"
+echo "[INFO] Step 2: Fill form fields"
+echo "[WARN] Email field has weak validation"
+echo "[INFO] Step 3: Submit registration"
+echo "[INFO] Step 4: Check confirmation email"
+echo "[INFO] UserRegistrationTest completed"
+echo "SUMMARY of TestCase [UserRegistrationTest]: PASSED"
+sleep 1
+
+echo ""
+echo "[INFO] ============================================"
+echo "Starting TestCase: PaymentProcessingTest"
+echo "[INFO] ============================================"
+echo "[INFO] Running PaymentProcessingTest..."
+echo "[DEBUG] Initializing payment gateway mock"
+echo "[INFO] Step 1: Add items to cart"
+echo "[INFO] Step 2: Proceed to checkout"
+echo "[ERROR] Payment gateway timeout after 30s"
+echo "[ERROR] Connection refused: payment.example.com:443"
+echo "[ERROR] PaymentProcessingTest FAILED"
+echo "SUMMARY of TestCase [PaymentProcessingTest]: ERROR"
+sleep 1
+
+echo ""
+echo "[INFO] ============================================"
+echo "Starting TestCase: SearchFunctionalityTest"
+echo "[INFO] ============================================"
+echo "[INFO] Running SearchFunctionalityTest..."
+echo "[DEBUG] Indexing test data"
+echo "[INFO] Step 1: Perform basic search"
+echo "[INFO] Step 2: Verify results count"
+echo "[INFO] Step 3: Test pagination"
+echo "[WARN] Search performance degraded (>500ms)"
+echo "[INFO] Step 4: Test filters"
+echo "[INFO] SearchFunctionalityTest completed"
+echo "SUMMARY of TestCase [SearchFunctionalityTest]: PASSED"
+sleep 1
+
+echo ""
+echo "[INFO] ============================================"
+echo "Starting TestCase: AdminDashboardTest"
+echo "[INFO] ============================================"
+echo "[INFO] Running AdminDashboardTest..."
+echo "[DEBUG] Logging in as admin user"
+echo "[INFO] Step 1: Load admin dashboard"
+echo "[INFO] Step 2: Check user statistics"
+echo "[INFO] Step 3: Verify system health"
+echo "[DEBUG] CPU: 45%, Memory: 2.1GB/4GB"
+echo "[INFO] AdminDashboardTest completed"
+echo "SUMMARY of TestCase [AdminDashboardTest]: PASSED"
+sleep 1
+
+echo ""
+echo "[INFO] ============================================"
+echo "Starting TestCase: APIIntegrationTest"
+echo "[INFO] ============================================"
+echo "[INFO] Running APIIntegrationTest..."
+echo "[DEBUG] Setting up API client"
+echo "[INFO] Step 1: Test GET /api/users"
+echo "[INFO] Step 2: Test POST /api/users"
+echo "[ERROR] Unexpected response code: 500"
+echo "[ERROR] Response body: {\"error\": \"Internal Server Error\"}"
+echo "[ERROR] APIIntegrationTest FAILED"
+echo "SUMMARY of TestCase [APIIntegrationTest]: ERROR"
+
+echo ""
+echo "[INFO] ============================================"
+echo "[INFO] TEST EXECUTION SUMMARY"
+echo "[INFO] ============================================"
+echo "[INFO] Total Tests: 6"
+echo "[INFO] Passed: 4"
+echo "[ERROR] Failed: 2"
+echo "[WARN] Build status: UNSTABLE"
+
+# Exit with failure to mark build as unstable
+exit 1
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
