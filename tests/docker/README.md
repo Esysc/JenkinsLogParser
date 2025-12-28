@@ -28,13 +28,14 @@ docker compose up -d
 
 ## Test Jobs
 
-Three pre-configured jobs are available:
+Four pre-configured jobs are available:
 
-| Job               | Description                    | Result   |
-| ----------------- | ------------------------------ | -------- |
-| `sample-test-job` | Mixed results (4 pass, 2 fail) | UNSTABLE |
-| `passing-build`   | All tests pass                 | SUCCESS  |
-| `failing-build`   | All tests fail                 | FAILURE  |
+| Job                | Description                        | Type      | Result   |
+| ------------------ | ---------------------------------- | --------- | -------- |
+| `sample-test-job`  | Mixed results (4 pass, 2 fail)     | Freestyle | UNSTABLE |
+| `passing-build`    | All tests pass                     | Freestyle | SUCCESS  |
+| `failing-build`    | All tests fail                     | Freestyle | FAILURE  |
+| `pipeline-example` | Multi-stage pipeline with 6 stages | Pipeline  | UNSTABLE |
 
 ## Testing the Extension
 

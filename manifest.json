@@ -11,8 +11,12 @@
             "js": ["magic.js"],
             "run_at": "document_idle",
             "matches": [
-                "http://*/*/*/*/console*",
-                "https://*/*/*/*/console*",
+                "http://*/*/console*",
+                "https://*/*/console*",
+                "http://*/*/consoleFull*",
+                "https://*/*/consoleFull*",
+                "http://*/*/flowGraphTable/*",
+                "https://*/*/flowGraphTable/*",
                 "http://localhost:*/test/*"
             ]
         }
