@@ -78,14 +78,21 @@ if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
     fi
 fi
 
-# Create annotated tag
+# Create annotated tag with changelog from README
 echo "Creating git tag ${TAG_NAME}..."
+
+# Extract changelog for current version from README.md
+# Finds the section starting with "### vX.Y.Z" and captures until the next "### v"
+CHANGELOG=$(sed -n "/^### ${TAG_NAME}$/,/^### v[0-9]/p" README.md | grep -v "^### v" | sed '/^$/d')
+
+if [ -z "$CHANGELOG" ]; then
+    # Fallback if no changelog found
+    CHANGELOG="Release ${TAG_NAME}"
+fi
+
 git tag -a "$TAG_NAME" -m "Release ${TAG_NAME}
 
-- Manifest V3 Chrome extension
-- Vanilla JavaScript (no jQuery)
-- Log colorization and test navigation
-- Download logs feature"
+${CHANGELOG}"
 
 echo -e "${GREEN}✓ Created git tag: ${TAG_NAME}${NC}"
 
