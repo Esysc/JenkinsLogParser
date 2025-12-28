@@ -62,14 +62,16 @@ unzip -l "$ZIP_FILE"
 echo ""
 TAG_NAME="v${VERSION}"
 
-# Check if tag already exists
+# Check if tag already exists locally
+TAG_EXISTS_LOCAL=false
 if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-    echo -e "${YELLOW}⚠ Git tag ${TAG_NAME} already exists${NC}"
+    TAG_EXISTS_LOCAL=true
+    echo -e "${YELLOW}⚠ Git tag ${TAG_NAME} already exists locally${NC}"
     read -p "Do you want to delete and recreate it? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         git tag -d "$TAG_NAME"
-        echo -e "${YELLOW}Deleted existing tag ${TAG_NAME}${NC}"
+        echo -e "${YELLOW}Deleted existing local tag ${TAG_NAME}${NC}"
     else
         echo "Skipping tag creation"
         echo ""
@@ -96,12 +98,26 @@ ${CHANGELOG}"
 
 echo -e "${GREEN}✓ Created git tag: ${TAG_NAME}${NC}"
 
+# Push the tag to remote
+echo ""
+read -p "Do you want to push the tag to origin? (Y/n): " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+    # Check if tag exists on remote
+    if git ls-remote --tags origin | grep -q "refs/tags/${TAG_NAME}$"; then
+        echo -e "${YELLOW}Tag ${TAG_NAME} exists on remote, force pushing...${NC}"
+        git push origin "$TAG_NAME" --force
+    else
+        git push origin "$TAG_NAME"
+    fi
+    echo -e "${GREEN}✓ Pushed tag ${TAG_NAME} to origin${NC}"
+fi
+
 echo ""
 echo "================================================"
 echo -e "${GREEN}Build complete!${NC}"
 echo ""
 echo "Next steps:"
 echo "  1. Review the zip file: $ZIP_FILE"
-echo "  2. Push the tag: git push origin ${TAG_NAME}"
-echo "  3. Upload to Chrome Web Store (if publishing)"
+echo "  2. Upload to Chrome Web Store (if publishing)"
 echo ""
