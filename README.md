@@ -4,14 +4,56 @@ A Chrome extension to parse Jenkins console logs with enhanced readability.
 
 ## Features
 
--   **Log Colorization** - Color-codes log lines by severity:
-    -   🔴 ERROR (red)
-    -   🔵 INFO (blue)
-    -   🟣 DEBUG (purple)
-    -   🟠 WARN (orange)
--   **Test Case Navigator** - Dropdown menu for quick navigation between test cases
--   **Download Logs** - One-click download of the console output as a text file
--   **HTTPS Support** - Works on both HTTP and HTTPS Jenkins instances
+### 🎨 Log Colorization
+
+Color-codes log lines by severity:
+
+-   🔴 **ERROR** (red)
+-   🟠 **WARN** (orange)
+-   🔵 **INFO** (blue)
+-   🟣 **DEBUG** (purple)
+
+### 📊 Stats Summary
+
+Shows count of errors, warnings, info, and debug messages at a glance.
+
+### 🔍 Search
+
+-   Real-time search with highlighting
+-   Press `Enter` to jump between matches
+-   Keyboard shortcut: `Cmd/Ctrl + F`
+
+### 🎚️ Severity Filters
+
+Toggle visibility of log levels with filter buttons.
+
+### 📍 Line Numbers
+
+Every log line is numbered for easy reference.
+
+### 📋 Copy Line
+
+Hover over any line and click 📋 to copy it to clipboard.
+
+### ⬇️ Jump to First Error
+
+One-click navigation to the first error in the log.
+
+### ➖ Collapse/Expand
+
+Hide DEBUG and INFO lines to focus on errors and warnings.
+
+### 🗺️ Test Case Navigator
+
+Dropdown menu for quick navigation between test cases.
+
+### 💾 Download Logs
+
+One-click download of the console output as a text file.
+
+### 🔐 HTTPS Support
+
+Works on both HTTP and HTTPS Jenkins instances.
 
 ## Installation
 
@@ -28,6 +70,18 @@ A Chrome extension to parse Jenkins console logs with enhanced readability.
 -   Works best with logs under 10MB
 
 ## Changelog
+
+### v0.3.0
+
+-   **Search** - Real-time search with highlighting and keyboard navigation
+-   **Severity Filters** - Toggle visibility of ERROR, WARN, INFO, DEBUG levels
+-   **Stats Summary** - Error/warning/info/debug count displayed in toolbar
+-   **Line Numbers** - Every log line is numbered
+-   **Copy Line** - Click to copy any log line to clipboard
+-   **Jump to First Error** - One-click navigation to first error
+-   **Collapse/Expand** - Hide verbose DEBUG and INFO lines
+-   **Keyboard Shortcuts** - Cmd/Ctrl+F for search, Escape to clear
+-   Enhanced UI with modern dark theme toolbar
 
 ### v0.2.0
 

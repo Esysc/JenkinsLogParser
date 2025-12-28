@@ -2,8 +2,8 @@
     "manifest_version": 3,
 
     "name": "Log Parser for Jenkins",
-    "version": "0.2.0",
-    "description": "Enhanced console interface for Jenkins with log colorization and test navigation",
+    "version": "0.3.0",
+    "description": "Enhanced console interface for Jenkins with log colorization, filtering, search, and test navigation",
     "permissions": ["activeTab"],
     "content_scripts": [
         {
