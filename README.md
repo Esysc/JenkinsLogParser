@@ -130,7 +130,7 @@ For end-to-end testing with a real Jenkins instance, see [tests/docker/README.md
 -   ✅ **No analytics** - No tracking or usage analytics
 -   ✅ **No external connections** - All processing happens locally in your browser
 -   ✅ **No remote code** - All code is bundled within the extension
--   ✅ **Minimal permissions** - Only uses `activeTab` to access Jenkins console pages when you visit them
+-   ✅ **Minimal permissions** - No extra permissions required; the extension's content script runs only on Jenkins console pages
 
 The extension only reads the Jenkins console output on the current page to colorize and enhance the log display. No data ever leaves your browser.
 
