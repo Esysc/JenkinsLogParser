@@ -95,6 +95,10 @@ For end-to-end testing with a real Jenkins instance, see [tests/docker/README.md
 
 ## Changelog
 
+### v0.3.1 - 2025-12-30
+
+-   No changes listed
+
 ### v0.3.0
 
 -   **Search** - Real-time search with highlighting and keyboard navigation
