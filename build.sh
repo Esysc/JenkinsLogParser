@@ -84,8 +84,22 @@ fi
 echo "Creating git tag ${TAG_NAME}..."
 
 # Extract changelog for current version from README.md
-# Finds the section starting with "### vX.Y.Z" and captures until the next "### v"
-CHANGELOG=$(sed -n "/^### ${TAG_NAME}$/,/^### v[0-9]/p" README.md | grep -v "^### v" | sed '/^$/d')
+# Matches heading "### vX.Y.Z" (optionally followed by date/details) and captures lines until next version heading
+CHANGELOG=$(awk -v tag="${TAG_NAME}" '
+    BEGIN { capture = 0 }
+    /^### v[0-9]+\.[0-9]+\.[0-9]+/ {
+        if ($0 ~ ("^### " tag)) {
+            capture = 1
+            next
+        }
+        if (capture) {
+            capture = 0
+        }
+    }
+    capture {
+        print
+    }
+' README.md | sed '/^$/d')
 
 if [ -z "$CHANGELOG" ]; then
     # Fallback if no changelog found
