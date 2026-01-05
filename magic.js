@@ -41,6 +41,13 @@
         let activeFilters = new Set(['ERROR', 'WARN', 'INFO', 'DEBUG', 'OTHER']);
         let processedLineCount = 0;
         let rawLogContent = '';
+        let autoFollowEnabled = true;
+        let followBtn = null;
+        const SCROLL_THRESHOLD_PX = 150;
+        const CHUNK_SIZE = 400;
+        let pendingRenderQueue = [];
+        let chunkRenderScheduled = false;
+        let pendingAutoScroll = false;
 
         // Helper function to escape HTML and prevent XSS
         function escapeHtml(text) {
@@ -69,6 +76,60 @@
                 }
             });
             return el;
+        }
+
+        function isNearBottom() {
+            const doc = document.documentElement;
+            const scrollPosition = window.scrollY + window.innerHeight;
+            return doc.scrollHeight - scrollPosition <= SCROLL_THRESHOLD_PX;
+        }
+
+        function scrollToBottom(forceInstant = false) {
+            window.scrollTo({
+                top: document.documentElement.scrollHeight,
+                behavior: forceInstant ? 'auto' : 'smooth',
+            });
+        }
+
+        const scheduleChunkCallback =
+            typeof window.requestIdleCallback === 'function'
+                ? (cb) => window.requestIdleCallback(cb, { timeout: 100 })
+                : (cb) => window.requestAnimationFrame(cb);
+
+        function scheduleChunkRender() {
+            if (chunkRenderScheduled || pendingRenderQueue.length === 0) return;
+            chunkRenderScheduled = true;
+            scheduleChunkCallback(() => {
+                chunkRenderScheduled = false;
+                renderChunk();
+            });
+        }
+
+        function renderChunk() {
+            if (pendingRenderQueue.length === 0) return;
+            const fragment = document.createDocumentFragment();
+            let processedEntries = 0;
+            while (pendingRenderQueue.length && processedEntries < CHUNK_SIZE) {
+                const { line, index } = pendingRenderQueue.shift();
+                const lineEl = parseLine(line, index);
+                fragment.appendChild(lineEl);
+                processedEntries++;
+            }
+
+            if (fragment.childNodes.length) {
+                parsedOutput.appendChild(fragment);
+                updateStats();
+
+                if (pendingAutoScroll && autoFollowEnabled) {
+                    scrollToBottom();
+                }
+            }
+
+            if (pendingRenderQueue.length) {
+                scheduleChunkRender();
+            } else {
+                pendingAutoScroll = false;
+            }
         }
 
         // Create wrapper for parsed output
@@ -142,6 +203,21 @@
         const downloadBtn = createElement('button', { className: 'action-btn' }, ['💾 Download']);
         actionBox.appendChild(downloadBtn);
 
+        followBtn = createElement(
+            'button',
+            { className: 'action-btn action-follow active', id: 'follow-toggle' },
+            ['📡 Follow']
+        );
+        followBtn.addEventListener('click', () => {
+            autoFollowEnabled = !autoFollowEnabled;
+            updateFollowButton();
+            if (autoFollowEnabled) {
+                scrollToBottom(true);
+            }
+        });
+        actionBox.appendChild(followBtn);
+        updateFollowButton();
+
         toolbar.appendChild(actionBox);
 
         // Test case navigator dropdown (integrated in toolbar)
@@ -176,6 +252,19 @@
                 '<span class="stat-item stat-total">�� ' +
                 stats.total +
                 '</span>';
+        }
+
+        function updateFollowButton() {
+            if (!followBtn) return;
+            if (autoFollowEnabled) {
+                followBtn.classList.add('active');
+                followBtn.textContent = '📡 Follow';
+                followBtn.title = 'Auto-scroll enabled';
+            } else {
+                followBtn.classList.remove('active');
+                followBtn.textContent = '⏸️ Follow';
+                followBtn.title = 'Auto-scroll paused';
+            }
         }
 
         // Parse a single line and return the HTML element
@@ -259,20 +348,24 @@
             const allLines = currentContent.split('\n');
             const newLines = allLines.slice(processedLineCount);
 
-            // Create document fragment for better performance
-            const fragment = document.createDocumentFragment();
+            if (newLines.length === 0) {
+                rawLogContent = currentContent;
+                processedLineCount = allLines.length;
+                return;
+            }
 
             newLines.forEach((line, i) => {
-                const index = processedLineCount + i;
-                const lineEl = parseLine(line, index);
-                fragment.appendChild(lineEl);
+                pendingRenderQueue.push({ line, index: processedLineCount + i });
             });
 
-            parsedOutput.appendChild(fragment);
             processedLineCount = allLines.length;
             rawLogContent = currentContent;
 
-            updateStats();
+            if (autoFollowEnabled && isNearBottom()) {
+                pendingAutoScroll = true;
+            }
+
+            scheduleChunkRender();
         }
 
         // Initial processing

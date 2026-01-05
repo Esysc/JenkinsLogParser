@@ -98,6 +98,12 @@ For end-to-end testing with a real Jenkins instance, see [tests/docker/README.md
 
 ## Changelog
 
+### v0.3.2 - 2026-01-05
+
+-   Added coverage for Jenkins `/job/*/log` endpoints so the parser loads on direct log views.
+-   Introduced an auto-follow toggle that keeps live builds pinned to the newest log lines unless the user scrolls away.
+-   Implemented chunked rendering for huge logs to keep the browser responsive when loading or streaming massive console output.
+
 ### v0.3.1 - 2025-12-30
 
 -   No changes listed
