@@ -54,6 +54,11 @@ Dropdown menu for quick navigation between test cases.
 
 One-click download of the console output as a text file.
 
+### 🛡️ Safe Full Log Loader
+
+-   Replaces Jenkins' native "Full Log" link with a streaming loader that fetches `consoleFull` output in manageable chunks, keeping the browser responsive.
+-   Provides a fallback link to open Jenkins' `consoleText` view in a new tab when needed.
+
 ### 🔐 HTTPS Support
 
 Works on both HTTP and HTTPS Jenkins instances.
@@ -102,7 +107,8 @@ For end-to-end testing with a real Jenkins instance, see [tests/docker/README.md
 
 -   Added coverage for Jenkins `/job/*/log` endpoints so the parser loads on direct log views.
 -   Introduced an auto-follow toggle that keeps live builds pinned to the newest log lines unless the user scrolls away.
--   Implemented chunked rendering for huge logs to keep the browser responsive when loading or streaming massive console output.
+-   Implemented adaptive chunked rendering for huge logs to keep the browser responsive when loading or streaming massive console output.
+-   Added a safe "Full Log" loader that hides Jenkins' native link, streams the entire log in chunks, and exposes a fallback raw log link.
 
 ### v0.3.1 - 2025-12-30
 

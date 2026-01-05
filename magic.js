@@ -43,11 +43,19 @@
         let rawLogContent = '';
         let autoFollowEnabled = true;
         let followBtn = null;
+        let fullLogBtn = null;
+        let fullLogUrl = '';
+        let rawLogUrl = '';
+        let rawFullLogLinkAppended = false;
+        let isStreamingFullLog = false;
         const SCROLL_THRESHOLD_PX = 150;
-        const CHUNK_SIZE = 400;
+        const BASE_CHUNK_SIZE = 200;
+        const MAX_RENDER_SLICE_MS = 12;
         let pendingRenderQueue = [];
         let chunkRenderScheduled = false;
         let pendingAutoScroll = false;
+        let observer = null;
+        let pollInterval = null;
 
         // Helper function to escape HTML and prevent XSS
         function escapeHtml(text) {
@@ -80,40 +88,53 @@
 
         function isNearBottom() {
             const doc = document.documentElement;
-            const scrollPosition = window.scrollY + window.innerHeight;
+            const scrollPosition = globalThis.scrollY + globalThis.innerHeight;
             return doc.scrollHeight - scrollPosition <= SCROLL_THRESHOLD_PX;
         }
 
         function scrollToBottom(forceInstant = false) {
-            window.scrollTo({
+            globalThis.scrollTo({
                 top: document.documentElement.scrollHeight,
                 behavior: forceInstant ? 'auto' : 'smooth',
             });
         }
 
         const scheduleChunkCallback =
-            typeof window.requestIdleCallback === 'function'
-                ? (cb) => window.requestIdleCallback(cb, { timeout: 100 })
-                : (cb) => window.requestAnimationFrame(cb);
+            typeof globalThis.requestIdleCallback === 'function'
+                ? (cb) => globalThis.requestIdleCallback(cb, { timeout: 100 })
+                : (cb) =>
+                      globalThis.requestAnimationFrame(() =>
+                          cb({
+                              timeRemaining: () => MAX_RENDER_SLICE_MS,
+                          })
+                      );
 
         function scheduleChunkRender() {
             if (chunkRenderScheduled || pendingRenderQueue.length === 0) return;
             chunkRenderScheduled = true;
-            scheduleChunkCallback(() => {
+            scheduleChunkCallback((deadline) => {
                 chunkRenderScheduled = false;
-                renderChunk();
+                renderChunk(deadline);
             });
         }
 
-        function renderChunk() {
+        function renderChunk(deadline) {
             if (pendingRenderQueue.length === 0) return;
             const fragment = document.createDocumentFragment();
             let processedEntries = 0;
-            while (pendingRenderQueue.length && processedEntries < CHUNK_SIZE) {
+            const startTime = performance.now();
+            const timeBudget = deadline && typeof deadline.timeRemaining === 'function'
+                ? deadline.timeRemaining()
+                : MAX_RENDER_SLICE_MS;
+            const effectiveBudget = Math.max(4, timeBudget);
+            while (pendingRenderQueue.length && processedEntries < BASE_CHUNK_SIZE) {
                 const { line, index } = pendingRenderQueue.shift();
                 const lineEl = parseLine(line, index);
                 fragment.appendChild(lineEl);
                 processedEntries++;
+                if (performance.now() - startTime >= effectiveBudget) {
+                    break;
+                }
             }
 
             if (fragment.childNodes.length) {
@@ -130,6 +151,23 @@
             } else {
                 pendingAutoScroll = false;
             }
+        }
+
+        function resetParsedState() {
+            parsedOutput.innerHTML = '';
+            Object.keys(stats).forEach((key) => {
+                stats[key] = 0;
+            });
+            testname = '';
+            href = '';
+            processedLineCount = 0;
+            rawLogContent = '';
+            pendingRenderQueue = [];
+            chunkRenderScheduled = false;
+            pendingAutoScroll = false;
+            uldropdown.innerHTML = '';
+            uldropdown.appendChild(emptyMsg);
+            updateStats();
         }
 
         // Create wrapper for parsed output
@@ -164,6 +202,7 @@
                 {
                     className: 'filter-btn filter-' + level.toLowerCase() + ' active',
                     'data-level': level,
+                    title: 'Toggle ' + level + ' lines',
                 },
                 [level]
             );
@@ -178,34 +217,52 @@
         // Live indicator
         const liveIndicator = createElement(
             'span',
-            { className: 'live-indicator', id: 'live-indicator' },
+            { className: 'live-indicator', id: 'live-indicator', title: 'Build status' },
             ['🔴 LIVE']
         );
         actionBox.appendChild(liveIndicator);
 
         // Expand/Collapse all
-        const collapseBtn = createElement('button', { className: 'action-btn' }, ['➖ Collapse']);
+        const collapseBtn = createElement(
+            'button',
+            { className: 'action-btn', title: 'Hide INFO and DEBUG lines' },
+            ['➖ Collapse']
+        );
         collapseBtn.addEventListener('click', () => toggleCollapseAll(true));
         actionBox.appendChild(collapseBtn);
 
-        const expandBtn = createElement('button', { className: 'action-btn' }, ['➕ Expand']);
+        const expandBtn = createElement(
+            'button',
+            { className: 'action-btn', title: 'Show INFO and DEBUG lines' },
+            ['➕ Expand']
+        );
         expandBtn.addEventListener('click', () => toggleCollapseAll(false));
         actionBox.appendChild(expandBtn);
 
         // Jump to first error
-        const jumpErrorBtn = createElement('button', { className: 'action-btn action-error' }, [
-            '⬇️ Error',
-        ]);
+        const jumpErrorBtn = createElement(
+            'button',
+            { className: 'action-btn action-error', title: 'Scroll to first ERROR line' },
+            ['⬇️ Error']
+        );
         jumpErrorBtn.addEventListener('click', jumpToFirstError);
         actionBox.appendChild(jumpErrorBtn);
 
         // Download logs button
-        const downloadBtn = createElement('button', { className: 'action-btn' }, ['💾 Download']);
+        const downloadBtn = createElement(
+            'button',
+            { className: 'action-btn', title: 'Download console output as text file' },
+            ['💾 Download']
+        );
         actionBox.appendChild(downloadBtn);
 
         followBtn = createElement(
             'button',
-            { className: 'action-btn action-follow active', id: 'follow-toggle' },
+            {
+                className: 'action-btn action-follow active',
+                id: 'follow-toggle',
+                title: 'Auto-scroll enabled',
+            },
             ['📡 Follow']
         );
         followBtn.addEventListener('click', () => {
@@ -218,12 +275,29 @@
         actionBox.appendChild(followBtn);
         updateFollowButton();
 
+        fullLogBtn = createElement(
+            'button',
+            {
+                className: 'action-btn action-full-log',
+                style: 'display:none;',
+                title: 'Stream entire log safely',
+            },
+            ['📜 Full Log']
+        );
+        fullLogBtn.addEventListener('click', () => {
+            if (!fullLogUrl || isStreamingFullLog) return;
+            loadFullLogSafely();
+        });
+        actionBox.appendChild(fullLogBtn);
+
         toolbar.appendChild(actionBox);
 
         // Test case navigator dropdown (integrated in toolbar)
-        const dropdownBtn = createElement('button', { className: 'dropbtn action-btn' }, [
-            '🗺️ Tests ▼',
-        ]);
+        const dropdownBtn = createElement(
+            'button',
+            { className: 'dropbtn action-btn', title: 'Navigate to parsed test cases' },
+            ['🗺️ Tests ▼']
+        );
         const dropdown = createElement('div', { className: 'dropdown toolbar-dropdown' });
         dropdown.appendChild(dropdownBtn);
         dropdown.appendChild(uldropdown);
@@ -233,6 +307,8 @@
         consoleOutput.style.display = 'none';
         consoleOutput.parentNode.insertBefore(toolbar, consoleOutput);
         consoleOutput.parentNode.insertBefore(parsedOutput, consoleOutput.nextSibling);
+
+        initFullLogOverride();
 
         // Update stats display
         function updateStats() {
@@ -264,6 +340,158 @@
                 followBtn.classList.remove('active');
                 followBtn.textContent = '⏸️ Follow';
                 followBtn.title = 'Auto-scroll paused';
+            }
+        }
+
+        function initFullLogOverride() {
+            if (!fullLogBtn) return;
+            const fullLinks = Array.from(document.querySelectorAll('a[href*="consoleFull"]'));
+            const textLinks = Array.from(document.querySelectorAll('a[href*="consoleText"]'));
+
+            if (!fullLinks.length && !textLinks.length) return;
+
+            if (fullLinks.length) {
+                fullLogUrl = fullLinks[0].href;
+                fullLinks.forEach((link) => {
+                    link.dataset.logParserHidden = 'true';
+                    link.style.display = 'none';
+                });
+            }
+
+            if (textLinks.length) {
+                rawLogUrl = textLinks[0].href;
+                textLinks.forEach((link) => {
+                    link.dataset.logParserHidden = 'true';
+                    link.style.display = 'none';
+                });
+            } else if (fullLogUrl) {
+                rawLogUrl = fullLogUrl.replace('consoleFull', 'consoleText');
+            }
+
+            if (!fullLogUrl && rawLogUrl) {
+                fullLogUrl = rawLogUrl;
+            }
+
+            if (!fullLogUrl) return;
+
+            fullLogBtn.style.display = '';
+            fullLogBtn.disabled = false;
+
+            if (!rawFullLogLinkAppended) {
+                const fallbackLink = createElement(
+                    'a',
+                    {
+                        href: rawLogUrl || fullLogUrl,
+                        target: '_blank',
+                        rel: 'noopener noreferrer',
+                        className: 'full-log-native-link',
+                    },
+                    ['Raw consoleText ↗']
+                );
+                fallbackLink.style.marginLeft = '8px';
+                actionBox.appendChild(fallbackLink);
+                rawFullLogLinkAppended = true;
+            }
+        }
+
+        function prepareFullLogLoad() {
+            if (!fullLogUrl || !fullLogBtn) {
+                openRawLogFallback();
+                return false;
+            }
+            ensureAutoFollowEnabled();
+            return true;
+        }
+
+        function openRawLogFallback() {
+            if (rawLogUrl) {
+                globalThis.open(rawLogUrl, '_blank', 'noopener');
+            }
+        }
+
+        function ensureAutoFollowEnabled() {
+            if (!autoFollowEnabled) {
+                autoFollowEnabled = true;
+                updateFollowButton();
+            }
+        }
+
+        function setFullLogButtonState(label, disabled) {
+            if (!fullLogBtn) return;
+            fullLogBtn.textContent = label;
+            fullLogBtn.disabled = disabled;
+        }
+
+        function disconnectObserverIfNeeded() {
+            if (observer) {
+                observer.disconnect();
+            }
+        }
+
+        function reconnectObserverIfNeeded() {
+            if (observer) {
+                observer.observe(consoleOutput, observerConfig);
+            }
+        }
+
+        async function fetchAndStreamFullLog() {
+            resetParsedState();
+            consoleOutput.textContent = '';
+
+            const response = await fetch(fullLogUrl, { credentials: 'include' });
+            if (!response.ok || !response.body) {
+                throw new Error('HTTP ' + response.status);
+            }
+
+            await streamResponseBody(response.body.getReader());
+        }
+
+        async function streamResponseBody(reader) {
+            const decoder = new TextDecoder();
+            while (true) {
+                const { value, done } = await reader.read();
+                if (value) {
+                    const chunk = decoder.decode(value, { stream: !done });
+                    if (chunk) {
+                        consoleOutput.textContent += chunk;
+                        processNewLines();
+                    }
+                }
+                if (done) break;
+            }
+        }
+
+        function handleFullLogError(error) {
+            console.error('Failed to load full log', error);
+            const fallbackPrompt = rawLogUrl ? '\nOpen consoleText instead?' : '';
+            if (globalThis.confirm('Failed to load full log: ' + error.message + fallbackPrompt)) {
+                openRawLogFallback();
+            }
+        }
+
+        function finalizeFullLogLoad(originalLabel) {
+            isStreamingFullLog = false;
+            setFullLogButtonState(originalLabel, false);
+            reconnectObserverIfNeeded();
+        }
+
+        async function loadFullLogSafely() {
+            if (!prepareFullLogLoad()) {
+                return;
+            }
+
+            const originalLabel = fullLogBtn.textContent;
+            setFullLogButtonState('⌛ Loading...', true);
+            isStreamingFullLog = true;
+
+            disconnectObserverIfNeeded();
+
+            try {
+                await fetchAndStreamFullLog();
+            } catch (error) {
+                handleFullLogError(error);
+            } finally {
+                finalizeFullLogLoad(originalLabel);
             }
         }
 
@@ -372,7 +600,14 @@
         processNewLines();
 
         // Set up MutationObserver for live updates
-        const observer = new MutationObserver((mutations) => {
+        const observerConfig = {
+            childList: true,
+            characterData: true,
+            subtree: true,
+        };
+
+        observer = new MutationObserver((mutations) => {
+            if (isStreamingFullLog) return;
             let hasChanges = false;
             mutations.forEach((mutation) => {
                 if (mutation.type === 'childList' || mutation.type === 'characterData') {
@@ -384,14 +619,11 @@
             }
         });
 
-        observer.observe(consoleOutput, {
-            childList: true,
-            characterData: true,
-            subtree: true,
-        });
+        observer.observe(consoleOutput, observerConfig);
 
         // Also poll for changes (backup for some Jenkins setups)
-        const pollInterval = setInterval(() => {
+        pollInterval = setInterval(() => {
+            if (isStreamingFullLog) return;
             const currentContent = consoleOutput.textContent;
             if (currentContent !== rawLogContent) {
                 processNewLines();
@@ -451,7 +683,7 @@
             searchMatches = [];
             parsedOutput.querySelectorAll('.log-line').forEach((line) => {
                 const content = line.querySelector('.log-content');
-                if (content && content.textContent.toLowerCase().includes(query)) {
+                if (content?.textContent?.toLowerCase()?.includes(query)) {
                     line.classList.add('search-match');
                     searchMatches.push(line);
                 }
