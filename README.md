@@ -1,7 +1,7 @@
+# JenkinsLogParser
+
 [![Installs](https://img.shields.io/chrome-web-store/users/hndknmcekdaidpgippdcaidggjeoemgg)](https://chromewebstore.google.com/detail/log-parser-for-jenkins/hndknmcekdaidpgippdcaidggjeoemgg)
 [![Get it now](https://img.shields.io/badge/Get%20it%20now-Chrome-brightgreen)](https://chromewebstore.google.com/detail/log-parser-for-jenkins/hndknmcekdaidpgippdcaidggjeoemgg)
-
-# JenkinsLogParser
 
 A Chrome extension to parse Jenkins console logs with enhanced readability.
 

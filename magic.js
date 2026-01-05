@@ -123,9 +123,10 @@
             const fragment = document.createDocumentFragment();
             let processedEntries = 0;
             const startTime = performance.now();
-            const timeBudget = deadline && typeof deadline.timeRemaining === 'function'
-                ? deadline.timeRemaining()
-                : MAX_RENDER_SLICE_MS;
+            const timeBudget =
+                deadline && typeof deadline.timeRemaining === 'function'
+                    ? deadline.timeRemaining()
+                    : MAX_RENDER_SLICE_MS;
             const effectiveBudget = Math.max(4, timeBudget);
             while (pendingRenderQueue.length && processedEntries < BASE_CHUNK_SIZE) {
                 const { line, index } = pendingRenderQueue.shift();
@@ -448,7 +449,7 @@
 
         async function streamResponseBody(reader) {
             const decoder = new TextDecoder();
-            while (true) {
+            for (;;) {
                 const { value, done } = await reader.read();
                 if (value) {
                     const chunk = decoder.decode(value, { stream: !done });
