@@ -1012,33 +1012,48 @@
             }
         });
 
-        // Add keyboard shortcuts help tooltip
-        const helpTooltip = createElement(
-            'div',
+        // Add keyboard shortcuts help button
+        const helpButton = createElement(
+            'button',
             {
-                className: 'keyboard-help-tooltip',
-                title: 'Keyboard Shortcuts',
-                style: 'display:none;',
+                className: 'action-btn',
+                title: 'Keyboard Shortcuts (press ? to toggle)',
+                style: 'margin-left: 10px;',
             },
-            [
-                '⌨️ Shortcuts:\n' +
-                    'Alt + ↑/↓: Navigate stages/errors\n' +
-                    'Alt + ←/→: Collapse/Expand\n' +
-                    'Alt + Home/End: First/Last\n' +
-                    'Ctrl/Cmd + F: Search\n' +
-                    'Esc: Clear search',
-            ]
+            ['⌨️ Shortcuts']
         );
-        toolbar.appendChild(helpTooltip);
 
-        // Show help on hover or ? key
+        const helpTooltip = createElement('div', {
+            className: 'keyboard-help-tooltip',
+            style: 'display:none;',
+        });
+        helpTooltip.innerHTML = `
+            <strong>⌨️ KEYBOARD SHORTCUTS</strong><br><br>
+            <kbd>Alt</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd> &nbsp; Navigate stages/errors<br>
+            <kbd>Alt</kbd> + <kbd>←</kbd> / <kbd>→</kbd> &nbsp; Collapse/Expand sections<br>
+            <kbd>Alt</kbd> + <kbd>Home</kbd> / <kbd>End</kbd> &nbsp; Jump to first/last<br>
+            <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>F</kbd> &nbsp; Search logs<br>
+            <kbd>Esc</kbd> &nbsp; Clear search<br>
+            <kbd>?</kbd> &nbsp; Toggle this help
+        `;
+        document.body.appendChild(helpTooltip);
+
+        // Toggle help with button click or ? key
         let helpVisible = false;
+        const toggleHelp = () => {
+            helpVisible = !helpVisible;
+            helpTooltip.style.display = helpVisible ? 'block' : 'none';
+        };
+
+        helpButton.addEventListener('click', toggleHelp);
+
         document.addEventListener('keydown', (e) => {
             if (e.key === '?' && document.activeElement.tagName !== 'INPUT') {
                 e.preventDefault();
-                helpVisible = !helpVisible;
-                helpTooltip.style.display = helpVisible ? 'block' : 'none';
+                toggleHelp();
             }
         });
+
+        toolbar.appendChild(helpButton);
     }
 })();
