@@ -135,17 +135,18 @@
         }
 
         function isNearBottom() {
-            const doc = document.documentElement;
-            const scrollPosition = globalThis.scrollY + globalThis.innerHeight;
-            return doc.scrollHeight - scrollPosition <= SCROLL_THRESHOLD_PX;
+            // Check if scrolling within the log container
+            const container = parsedOutput;
+            const scrollPosition = container.scrollTop + container.clientHeight;
+            return container.scrollHeight - scrollPosition <= SCROLL_THRESHOLD_PX;
         }
 
         function scrollToBottom(forceInstant = false) {
-            // Use instant scroll for better performance with large logs
+            // Scroll the log container instead of the window
             const behavior =
                 forceInstant || parsedOutput.childElementCount > 5000 ? 'auto' : 'smooth';
-            globalThis.scrollTo({
-                top: document.documentElement.scrollHeight,
+            parsedOutput.scrollTo({
+                top: parsedOutput.scrollHeight,
                 behavior: behavior,
             });
         }

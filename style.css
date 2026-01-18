@@ -933,6 +933,28 @@ span.thirdTs {
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 20px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom scrollbar for log container */
+.log-parser-output::-webkit-scrollbar {
+    width: 10px;
+}
+
+.log-parser-output::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.log-parser-output::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.5);
+    border-radius: 4px;
+}
+
+.log-parser-output::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 128, 128, 0.7);
 }
 
 /* Loading Spinner */
