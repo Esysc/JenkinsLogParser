@@ -917,9 +917,9 @@ span.thirdTs {
     align-items: center;
     gap: 15px;
     padding: 10px 15px;
-    background: transparent;
-    border-bottom: 2px solid rgba(15, 52, 96, 0.3);
-    border-radius: 4px;
+    background: rgba(128, 128, 128, 0.15);
+    border: 1px solid rgba(128, 128, 128, 0.3);
+    border-radius: 12px;
     margin-bottom: 10px;
     position: sticky;
     top: 56px;
