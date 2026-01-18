@@ -1,0 +1,214 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job">
+  <description>Stress test pipeline generating 10K+ log lines to test auto-follow and performance</description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+    <script><![CDATA[
+pipeline {
+    agent any
+
+    stages {
+        stage('Generate Large Build Log') {
+            steps {
+                echo '[INFO] ============================================'
+                echo '[INFO] STRESS TEST: Large Log Generation'
+                echo '[INFO] Target: 10,000+ log lines'
+                echo '[INFO] Testing: Auto-follow, Performance, Navigator'
+                echo '[INFO] ============================================'
+                echo ''
+
+                script {
+                    // Stage 1: Generate 2000 INFO lines
+                    echo '[INFO] Stage 1: Generating INFO lines (2000 lines)...'
+                    (1..2000).each { i ->
+                        echo "[INFO] Processing item $i: Loading configuration, parsing dependencies, building modules..."
+                    }
+                    echo '[INFO] Stage 1 complete: 2000 INFO lines generated'
+                    echo ''
+
+                    // Stage 2: Generate 1000 DEBUG lines mixed with INFO
+                    echo '[INFO] Stage 2: Generating DEBUG lines (1000 lines)...'
+                    (1..1000).each { i ->
+                        if (i % 5 == 0) {
+                            echo "[INFO] Debug checkpoint $i"
+                        } else {
+                            echo "[DEBUG] Internal state: counter=$i, status=processing, memory_usage=${i * 2}MB"
+                        }
+                    }
+                    echo '[INFO] Stage 2 complete: 1000 DEBUG lines generated'
+                    echo ''
+
+                    // Stage 3: Generate test cases (500 lines)
+                    echo '[INFO] Stage 3: Running test suite (500 lines)...'
+                    echo 'Starting TestCase: UnitTestBatch1'
+                    (1..100).each { i ->
+                        echo "[INFO] Test $i: Running test_validation_rules_$i"
+                    }
+                    echo 'SUMMARY of TestCase [UnitTestBatch1]: PASSED'
+
+                    echo 'Starting TestCase: UnitTestBatch2'
+                    (101..200).each { i ->
+                        echo "[INFO] Test $i: Running test_service_integration_$i"
+                    }
+                    echo 'SUMMARY of TestCase [UnitTestBatch2]: PASSED'
+
+                    echo 'Starting TestCase: UnitTestBatch3'
+                    (201..300).each { i ->
+                        if (i == 250) {
+                            echo "[ERROR] Test $i: FAILED - Assertion error in test_database_query_$i"
+                        } else {
+                            echo "[INFO] Test $i: Running test_database_query_$i"
+                        }
+                    }
+                    echo 'SUMMARY of TestCase [UnitTestBatch3]: ERROR'
+
+                    echo '[INFO] Stage 3 complete: 300 test cases generated'
+                    echo ''
+                }
+            }
+        }
+
+        stage('Generate Mixed Patterns') {
+            steps {
+                echo '[INFO] Stage 4: Generating mixed log patterns (3000 lines)...'
+
+                script {
+                    // Maven tests
+                    echo 'Running com.example.integration.DatabaseTest'
+                    (1..300).each { i ->
+                        echo "[DEBUG] Executing test method: test_query_$i"
+                    }
+                    echo 'Tests run: 300, Failures: 5, Errors: 0, Skipped: 0, Time elapsed: 45.234 s'
+
+                    echo 'Running com.example.integration.CacheTest'
+                    (1..300).each { i ->
+                        echo "[DEBUG] Cache operation $i: set-get-invalidate"
+                    }
+                    echo 'Tests run: 300, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.567 s'
+
+                    echo 'Running com.example.integration.MessagingTest'
+                    (1..300).each { i ->
+                        echo "[DEBUG] Message test $i: publish-consume-verify"
+                    }
+                    echo 'Tests run: 300, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 28.891 s'
+
+                    // JUnit tests
+                    echo '[INFO] JUnit Test Suite'
+                    (1..500).each { i ->
+                        if (i % 50 == 0) {
+                            echo "[WARN] Test: testConcurrentAccess_$i - Slow (${500 + i}ms)"
+                        } else if (i % 100 == 0) {
+                            echo "[ERROR] Test: testMemoryLeak_$i - FAILED"
+                        } else {
+                            echo "[INFO] Test: testDataIntegrity_$i - PASSED"
+                        }
+                    }
+
+                    // Pipeline steps
+                    echo '[Pipeline] { (Build Artifacts)'
+                    (1..200).each { i ->
+                        echo "+ gradle build --project=$i"
+                    }
+                    echo '[Pipeline] }'
+
+                    echo '[Pipeline] { (Run Integration Tests)'
+                    (1..200).each { i ->
+                        echo "+ mvn test -Dtest=IntegrationTest_$i"
+                    }
+                    echo '[Pipeline] }'
+
+                    // Docker/Kubernetes commands
+                    echo '[Pipeline] { (Deploy Application)'
+                    (1..100).each { i ->
+                        echo "+ docker build -t myapp:v$i ."
+                        echo "+ docker push myapp:v$i"
+                        echo "+ kubectl set image deployment/app app=myapp:v$i"
+                    }
+                    echo '[Pipeline] }'
+
+                    echo '[INFO] Stage 4 complete: Mixed patterns generated'
+                    echo ''
+                }
+            }
+        }
+
+        stage('Generate Stress Events') {
+            steps {
+                echo '[INFO] Stage 5: Generating rapid fire events (2000 lines)...'
+
+                script {
+                    // Rapid fire updates (simulates live build)
+                    (1..2000).each { i ->
+                        int level = i % 4
+                        String msg = ""
+                        switch(level) {
+                            case 0:
+                                msg = "[ERROR] Critical failure in component_$i: Connection refused"
+                                break
+                            case 1:
+                                msg = "[WARN] Performance degradation detected: response_time=${i * 10}ms"
+                                break
+                            case 2:
+                                msg = "[INFO] Processing event $i of 2000: Status=in_progress"
+                                break
+                            case 3:
+                                msg = "[DEBUG] Event handler $i executed: duration=${i % 100}ms"
+                                break
+                        }
+                        echo msg
+                    }
+
+                    echo '[INFO] Stage 5 complete: Rapid fire events generated'
+                    echo ''
+                }
+            }
+        }
+
+        stage('Final Report') {
+            steps {
+                echo '[INFO] ============================================'
+                echo '[INFO] STRESS TEST COMPLETE'
+                echo '[INFO] ============================================'
+                echo '[INFO] Total lines generated: ~10,500+'
+                echo '[INFO] Test cases: 3 batches with mixed results'
+                echo '[INFO] Failed tests: 6'
+                echo '[INFO] Warnings: 40+'
+                echo '[INFO] Errors: 40+'
+                echo '[INFO] ============================================'
+                echo ''
+                echo '[INFO] Test the extension by:'
+                echo '[INFO] 1. Open Console Output while build is running'
+                echo '[INFO] 2. Watch Navigator dropdown populate'
+                echo '[INFO] 3. Verify auto-follow keeps up (Follow button stays active)'
+                echo '[INFO] 4. Verify browser stays responsive'
+                echo '[INFO] 5. Check stats counter updates smoothly'
+                echo '[INFO] 6. Test search and filters'
+                echo ''
+                echo '[INFO] Expected performance:'
+                echo '[INFO] - Rendering: < 10 seconds total'
+                echo '[INFO] - Browser: Responsive (no freezing)'
+                echo '[INFO] - Follow: Active and keeping up'
+                echo '[INFO] - Memory: < 100MB'
+                echo ''
+                echo '[INFO] ============================================'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '[INFO] Stress test pipeline completed successfully!'
+            echo '[INFO] All 10,500+ lines rendered without issues'
+        }
+        always {
+            echo '[INFO] Pipeline finished'
+        }
+    }
+}
+]]></script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

@@ -46,9 +46,20 @@ One-click navigation to the first error in the log.
 
 Hide DEBUG and INFO lines to focus on errors and warnings.
 
-### 🗺️ Test Case Navigator
+### 🗺️ Navigator (Stages, Steps & Tests)
 
-Dropdown menu for quick navigation between test cases.
+Dropdown menu for quick navigation between:
+
+-   **Pipeline stages** (🔦 icon)
+-   **Pipeline steps** (⚙️ icon)
+-   **Test cases** (🧪 icon)
+
+Automatically detects multiple patterns including:
+
+-   Jenkins Pipeline stages (`[Pipeline] stage`)
+-   Test frameworks (JUnit, Maven, Gradle)
+-   Custom test markers
+-   Generic step markers
 
 ### 💾 Download Logs
 
@@ -94,11 +105,22 @@ npm run test:coverage
 
 For end-to-end testing with a real Jenkins instance, see [tests/docker/README.md](tests/docker/README.md).
 
+The Docker setup includes a `demo-patterns` pipeline job that showcases all supported log pattern types:
+
+-   Pipeline stages (`[Pipeline] stage`)
+-   Test cases (original `Starting TestCase:` format)
+-   Maven/Gradle tests (`Running com.example.Test`)
+-   JUnit tests (`Test: testName`)
+-   Shell commands (`+ kubectl apply`)
+
+This is a great way to see all features in action before deploying the extension.
+
 ## Notes
 
 -   Uses **Manifest V3** (Chrome's latest extension format)
 -   Runs when the page loads completely
--   Test case navigation requires log entries with `"Starting TestCase:"` and `"SUMMARY of TestCase ["`
+-   Navigator automatically detects various Jenkins log patterns (stages, steps, test cases)
+-   Supports custom patterns through regex-based detection
 -   Works best with logs under 10MB
 
 ## Changelog

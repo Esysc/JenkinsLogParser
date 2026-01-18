@@ -24,8 +24,52 @@
         if (consoleOutput.classList.contains('log-parser-enhanced')) return;
         consoleOutput.classList.add('log-parser-enhanced');
 
-        const PRE_STRING = 'Starting TestCase:';
-        const POST_STRING = 'SUMMARY of TestCase [';
+        // Navigation patterns for detecting stages, steps, and test cases
+        const NAVIGATION_PATTERNS = [
+            // Test case patterns
+            {
+                start: /Starting TestCase:\s*(.+)$/i,
+                end: /SUMMARY of TestCase \[([^\]]+)\]:\s*(\w+)/i,
+                type: 'test',
+                icon: '🧪',
+            },
+            // Pipeline stage patterns
+            {
+                start: /^\[Pipeline\]\s+stage\s*\(?['"]?(.+?)['"]?\)?/i,
+                end: /^\[Pipeline\]\s+\/\s*stage/i,
+                type: 'stage',
+                icon: '📦',
+            },
+            {
+                start: /^Stage\s+['"]?(.+?)['"]?\s+started/i,
+                end: /^Stage\s+['"]?(.+?)['"]?\s+(completed|failed)/i,
+                type: 'stage',
+                icon: '📦',
+            },
+            { start: /^\[(.+?)\]\s+Stage/i, end: null, type: 'stage', icon: '📦' },
+            // Maven/Gradle test patterns
+            {
+                start: /^Running\s+(.+)$/i,
+                end: /^Tests run:\s*\d+.*?in\s+(.+)$/i,
+                type: 'test',
+                icon: '🧪',
+            },
+            // JUnit patterns
+            {
+                start: /^Test:\s+(.+)$/i,
+                end: /^Test\s+(.+?)\s+(PASSED|FAILED)/i,
+                type: 'test',
+                icon: '🧪',
+            },
+            // Generic step patterns
+            {
+                start: /^\[Pipeline\]\s+\{\s*\((.+?)\)/i,
+                end: /^\[Pipeline\]\s+\}/i,
+                type: 'step',
+                icon: '⚙️',
+            },
+            { start: /^\+\s+(.+)$/i, end: null, type: 'step', icon: '⚙️' },
+        ];
 
         const LOG_LEVELS = {
             ERROR: { color: '#F90636', priority: 1 },
@@ -38,6 +82,8 @@
         const stats = { ERROR: 0, WARN: 0, INFO: 0, DEBUG: 0, total: 0 };
         let testname = '';
         let href = '';
+        let currentNavType = null;
+        let currentNavIcon = null;
         let activeFilters = new Set(['ERROR', 'WARN', 'INFO', 'DEBUG', 'OTHER']);
         let processedLineCount = 0;
         let rawLogContent = '';
@@ -46,12 +92,13 @@
         let fullLogBtn = null;
         let fullLogUrl = '';
         let rawLogUrl = '';
-        let rawFullLogLinkAppended = false;
         let isStreamingFullLog = false;
         const SCROLL_THRESHOLD_PX = 150;
-        const BASE_CHUNK_SIZE = 200;
-        const MAX_RENDER_SLICE_MS = 12;
+        const BASE_CHUNK_SIZE = 500;
+        const MAX_RENDER_SLICE_MS = 50;
+        const STATS_UPDATE_THROTTLE_MS = 200;
         let pendingRenderQueue = [];
+        let lastStatsUpdate = 0;
         let chunkRenderScheduled = false;
         let pendingAutoScroll = false;
         let observer = null;
@@ -87,15 +134,19 @@
         }
 
         function isNearBottom() {
-            const doc = document.documentElement;
-            const scrollPosition = globalThis.scrollY + globalThis.innerHeight;
-            return doc.scrollHeight - scrollPosition <= SCROLL_THRESHOLD_PX;
+            // Check if scrolling within the log container
+            const container = parsedOutput;
+            const scrollPosition = container.scrollTop + container.clientHeight;
+            return container.scrollHeight - scrollPosition <= SCROLL_THRESHOLD_PX;
         }
 
         function scrollToBottom(forceInstant = false) {
-            globalThis.scrollTo({
-                top: document.documentElement.scrollHeight,
-                behavior: forceInstant ? 'auto' : 'smooth',
+            // Scroll the log container instead of the window
+            const behavior =
+                forceInstant || parsedOutput.childElementCount > 5000 ? 'auto' : 'smooth';
+            parsedOutput.scrollTo({
+                top: parsedOutput.scrollHeight,
+                behavior: behavior,
             });
         }
 
@@ -140,10 +191,19 @@
 
             if (fragment.childNodes.length) {
                 parsedOutput.appendChild(fragment);
-                updateStats();
 
-                if (pendingAutoScroll && autoFollowEnabled) {
-                    scrollToBottom();
+                // Throttle stats updates to reduce reflows
+                const now = performance.now();
+                if (
+                    now - lastStatsUpdate > STATS_UPDATE_THROTTLE_MS ||
+                    pendingRenderQueue.length === 0
+                ) {
+                    updateStats();
+                    lastStatsUpdate = now;
+                }
+
+                if (pendingAutoScroll && autoFollowEnabled && pendingRenderQueue.length === 0) {
+                    scrollToBottom(true); // Force instant scroll for better performance
                 }
             }
 
@@ -184,6 +244,13 @@
         // Create toolbar first (before processing any lines)
         const toolbar = createElement('div', { className: 'log-parser-toolbar' });
 
+        // Add loading spinner
+        const spinner = createElement('div', { className: 'log-spinner' }, [
+            '<div class="spinner-icon"></div>',
+            '<span class="spinner-text">Processing logs...</span>',
+        ]);
+        toolbar.appendChild(spinner);
+
         // Stats summary (will be updated dynamically)
         const statsSummary = createElement('div', { className: 'log-stats', id: 'log-stats' });
         toolbar.appendChild(statsSummary);
@@ -214,6 +281,55 @@
 
         // Action buttons
         const actionBox = createElement('div', { className: 'log-actions' });
+
+        // Multi-copy button
+        const selectedLines = new Set();
+        let lastSelectedLine = null;
+        const copySelectedBtn = createElement(
+            'button',
+            { className: 'action-btn', title: 'Copy all selected lines', disabled: true },
+            ['📑 Copy selected (0)']
+        );
+        const updateCopySelectedState = () => {
+            copySelectedBtn.textContent = '📑 Copy selected (' + selectedLines.size + ')';
+            copySelectedBtn.disabled = selectedLines.size === 0;
+        };
+
+        const setLineSelection = (line, selected) => {
+            const checkbox = line.querySelector('.select-line-checkbox');
+            if (checkbox) {
+                checkbox.checked = selected;
+            }
+            if (selected) {
+                selectedLines.add(line);
+                line.classList.add('selected');
+            } else {
+                selectedLines.delete(line);
+                line.classList.remove('selected');
+            }
+            updateCopySelectedState();
+        };
+
+        const toggleLineSelection = (line) => {
+            setLineSelection(line, !selectedLines.has(line));
+        };
+        copySelectedBtn.addEventListener('click', () => {
+            if (!selectedLines.size) return;
+            const ordered = Array.from(selectedLines).sort(
+                (a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top
+            );
+            const text = ordered
+                .map((el) => el.querySelector('.log-content').textContent)
+                .join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                const prev = copySelectedBtn.textContent;
+                copySelectedBtn.textContent = '✅ Copied (' + selectedLines.size + ')';
+                setTimeout(() => {
+                    copySelectedBtn.textContent = prev;
+                }, 1500);
+            });
+        });
+        actionBox.appendChild(copySelectedBtn);
 
         // Live indicator
         const liveIndicator = createElement(
@@ -293,11 +409,11 @@
 
         toolbar.appendChild(actionBox);
 
-        // Test case navigator dropdown (integrated in toolbar)
+        // Navigation dropdown (integrated in toolbar)
         const dropdownBtn = createElement(
             'button',
-            { className: 'dropbtn action-btn', title: 'Navigate to parsed test cases' },
-            ['🗺️ Tests ▼']
+            { className: 'dropbtn action-btn', title: 'Navigate to stages, steps, and test cases' },
+            ['🗺️ Navigator ▼']
         );
         const dropdown = createElement('div', { className: 'dropdown toolbar-dropdown' });
         dropdown.appendChild(dropdownBtn);
@@ -377,22 +493,6 @@
 
             fullLogBtn.style.display = '';
             fullLogBtn.disabled = false;
-
-            if (!rawFullLogLinkAppended) {
-                const fallbackLink = createElement(
-                    'a',
-                    {
-                        href: rawLogUrl || fullLogUrl,
-                        target: '_blank',
-                        rel: 'noopener noreferrer',
-                        className: 'full-log-native-link',
-                    },
-                    ['Raw consoleText ↗']
-                );
-                fallbackLink.style.marginLeft = '8px';
-                actionBox.appendChild(fallbackLink);
-                rawFullLogLinkAppended = true;
-            }
         }
 
         function prepareFullLogLoad() {
@@ -513,16 +613,58 @@
             stats.total++;
 
             const escapedLine = escapeHtml(line);
-            const preIndex = line.indexOf(PRE_STRING);
-            const postIndex = line.indexOf(POST_STRING);
+
+            // Check for navigation markers (stages, steps, tests)
+            // Only process navigation if line contains potential markers (performance optimization)
+            let navStart = null;
+            let navEnd = null;
+            const hasMarkers =
+                line.includes('[') ||
+                line.includes('Test') ||
+                line.includes('Stage') ||
+                line.includes('Running') ||
+                line.includes('SUMMARY');
+
+            if (hasMarkers) {
+                for (const pattern of NAVIGATION_PATTERNS) {
+                    const startMatch = line.match(pattern.start);
+                    if (startMatch) {
+                        navStart = {
+                            pattern,
+                            name: startMatch[1] ? startMatch[1].trim() : line.trim(),
+                        };
+                        break;
+                    }
+                }
+                if (!navStart && testname) {
+                    // Check for end pattern
+                    for (const pattern of NAVIGATION_PATTERNS) {
+                        if (pattern.end) {
+                            const endMatch = line.match(pattern.end);
+                            if (endMatch) {
+                                navEnd = {
+                                    pattern,
+                                    passed:
+                                        !line.includes('ERROR') &&
+                                        !line.includes('FAILED') &&
+                                        !line.includes('failed'),
+                                };
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
 
             const lineNum = String(index + 1).padStart(5, ' ');
 
             let lineId = 'line-' + index;
-            if (preIndex !== -1) {
-                testname = escapeHtml(line.substring(preIndex + PRE_STRING.length));
+            if (navStart) {
+                testname = escapeHtml(navStart.name);
                 href = '#test' + index;
                 lineId = 'test' + index;
+                currentNavType = navStart.pattern.type;
+                currentNavIcon = navStart.pattern.icon;
             }
 
             const lineEl = createElement('div', {
@@ -532,6 +674,7 @@
             });
 
             lineEl.innerHTML =
+                '<input type="checkbox" class="select-line-checkbox" title="Select line" />' +
                 '<span class="log-line-num">' +
                 lineNum +
                 '</span>' +
@@ -542,23 +685,29 @@
                 '</span>' +
                 '<button class="copy-line-btn" title="Copy line">📋</button>';
 
-            // Add to test case navigator if this is a summary line
-            if (postIndex !== -1) {
+            // Add to navigator if this is an end line
+            if (navEnd) {
                 // Remove empty message if present
                 const empty = uldropdown.querySelector('.dropdown-empty');
                 if (empty) empty.remove();
 
-                const menuColor = line.includes('ERROR') ? '#F90636' : '#2ACF1F';
+                const menuColor = navEnd.passed ? '#2ACF1F' : '#F90636';
+                const icon = currentNavIcon || '📍';
                 const menuBtn = createElement('button', {}, [
                     '<a href="' +
                         href +
-                        '"><span style="color:' +
+                        '">' +
+                        icon +
+                        ' <span style="color:' +
                         menuColor +
                         '">' +
                         testname +
                         '</span></a>',
                 ]);
                 uldropdown.appendChild(menuBtn);
+                testname = '';
+                currentNavType = null;
+                currentNavIcon = null;
             }
 
             // Apply current filter
@@ -600,6 +749,11 @@
         // Initial processing
         processNewLines();
 
+        // Hide spinner after initial load
+        setTimeout(() => {
+            spinner.style.display = 'none';
+        }, 500);
+
         // Set up MutationObserver for live updates
         const observerConfig = {
             childList: true,
@@ -607,29 +761,48 @@
             subtree: true,
         };
 
+        let mutationDebounceTimer = null;
         observer = new MutationObserver((mutations) => {
             if (isStreamingFullLog) return;
-            let hasChanges = false;
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                    hasChanges = true;
-                }
-            });
-            if (hasChanges) {
-                processNewLines();
+
+            // Debounce rapid mutations to avoid excessive processing
+            if (mutationDebounceTimer) {
+                clearTimeout(mutationDebounceTimer);
             }
+
+            mutationDebounceTimer = setTimeout(() => {
+                let hasChanges = false;
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                        hasChanges = true;
+                    }
+                });
+                if (hasChanges) {
+                    processNewLines();
+                }
+                mutationDebounceTimer = null;
+            }, 100);
         });
 
         observer.observe(consoleOutput, observerConfig);
 
         // Also poll for changes (backup for some Jenkins setups)
+        // Dynamically adjust poll rate based on log size for better performance
+        let pollRate = 1000;
         pollInterval = setInterval(() => {
             if (isStreamingFullLog) return;
             const currentContent = consoleOutput.textContent;
             if (currentContent !== rawLogContent) {
                 processNewLines();
+                // Reduce polling frequency for very large logs
+                const lineCount = parsedOutput.childElementCount;
+                if (lineCount > 10000 && pollRate === 1000) {
+                    clearInterval(pollInterval);
+                    pollRate = 2000;
+                    pollInterval = setInterval(arguments.callee, pollRate);
+                }
             }
-        }, 1000);
+        }, pollRate);
 
         // Check if build is complete (live indicator)
         function checkBuildStatus() {
@@ -784,10 +957,12 @@
             }
         }
 
-        // Copy line functionality
+        // Copy + multi-select functionality
         parsedOutput.addEventListener('click', (e) => {
+            const line = e.target.closest('.log-line');
+
+            // Individual copy
             if (e.target.classList.contains('copy-line-btn')) {
-                const line = e.target.closest('.log-line');
                 const content = line.querySelector('.log-content').textContent;
                 navigator.clipboard.writeText(content).then(() => {
                     e.target.textContent = '✅';
@@ -795,6 +970,32 @@
                         e.target.textContent = '📋';
                     }, 1500);
                 });
+                return;
+            }
+
+            // Checkbox selection
+            if (e.target.classList.contains('select-line-checkbox')) {
+                setLineSelection(line, e.target.checked);
+                lastSelectedLine = line;
+                return;
+            }
+
+            // Click anywhere on line toggles selection; Shift+click selects range
+            if (line && !e.target.closest('.copy-line-btn')) {
+                if (e.shiftKey && lastSelectedLine) {
+                    const lines = Array.from(parsedOutput.querySelectorAll('.log-line'));
+                    const start = lines.indexOf(lastSelectedLine);
+                    const end = lines.indexOf(line);
+                    if (start !== -1 && end !== -1) {
+                        const [s, eIdx] = start < end ? [start, end] : [end, start];
+                        for (let i = s; i <= eIdx; i++) {
+                            setLineSelection(lines[i], true);
+                        }
+                    }
+                } else {
+                    toggleLineSelection(line);
+                }
+                lastSelectedLine = line;
             }
         });
 
@@ -813,6 +1014,123 @@
                 searchInput.dispatchEvent(new Event('input'));
                 searchInput.blur();
             }
+
+            // Arrow key navigation with Alt modifier
+            if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                const navigationItems = Array.from(uldropdown.querySelectorAll('button a'));
+                const errorLines = Array.from(
+                    parsedOutput.querySelectorAll('.log-line[data-level="ERROR"]')
+                );
+                const allNavigableLines = [
+                    ...Array.from(parsedOutput.querySelectorAll('.log-line[id^="test"]')),
+                    ...errorLines,
+                ].sort((a, b) => {
+                    const aTop = a.getBoundingClientRect().top;
+                    const bTop = b.getBoundingClientRect().top;
+                    return aTop - bTop;
+                });
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    // Jump to next stage/error
+                    const currentScroll = window.scrollY;
+                    const nextItem = allNavigableLines.find((line) => {
+                        const rect = line.getBoundingClientRect();
+                        return rect.top > 100; // Find next item below current viewport
+                    });
+                    if (nextItem) {
+                        nextItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        nextItem.classList.add('highlight-flash');
+                        setTimeout(() => nextItem.classList.remove('highlight-flash'), 2000);
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    // Jump to previous stage/error
+                    const currentScroll = window.scrollY;
+                    const prevItem = allNavigableLines.reverse().find((line) => {
+                        const rect = line.getBoundingClientRect();
+                        return rect.bottom < window.innerHeight - 100;
+                    });
+                    if (prevItem) {
+                        prevItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        prevItem.classList.add('highlight-flash');
+                        setTimeout(() => prevItem.classList.remove('highlight-flash'), 2000);
+                    }
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    // Collapse (hide DEBUG and INFO)
+                    toggleCollapseAll(true);
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    // Expand (show all)
+                    toggleCollapseAll(false);
+                } else if (e.key === 'Home') {
+                    e.preventDefault();
+                    // Jump to first stage/error
+                    if (allNavigableLines.length > 0) {
+                        const firstItem = allNavigableLines[0];
+                        firstItem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        firstItem.classList.add('highlight-flash');
+                        setTimeout(() => firstItem.classList.remove('highlight-flash'), 2000);
+                    }
+                } else if (e.key === 'End') {
+                    e.preventDefault();
+                    // Jump to last stage/error
+                    if (allNavigableLines.length > 0) {
+                        const lastItem = allNavigableLines[allNavigableLines.length - 1];
+                        lastItem.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        lastItem.classList.add('highlight-flash');
+                        setTimeout(() => lastItem.classList.remove('highlight-flash'), 2000);
+                    }
+                }
+            }
         });
+
+        // Add keyboard shortcuts help button
+        const helpButton = createElement(
+            'button',
+            {
+                className: 'action-btn',
+                title: 'Keyboard Shortcuts (press ? to toggle)',
+                style: 'margin-left: 10px;',
+            },
+            ['⌨️ Shortcuts']
+        );
+
+        const helpTooltip = createElement('div', {
+            className: 'keyboard-help-tooltip',
+            style: 'display:none;',
+        });
+        helpTooltip.innerHTML = `
+            <strong>⌨️ KEYBOARD SHORTCUTS</strong><br><br>
+            <kbd>Alt</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd> &nbsp; Navigate stages/errors<br>
+            <kbd>Alt</kbd> + <kbd>←</kbd> / <kbd>→</kbd> &nbsp; Collapse/Expand sections<br>
+            <kbd>Alt</kbd> + <kbd>Home</kbd> / <kbd>End</kbd> &nbsp; Jump to first/last<br>
+            Click line &nbsp; Toggle selection<br>
+            <kbd>Shift</kbd> + Click &nbsp; Select range of lines<br>
+            Copy selected button &nbsp; Copy all selected lines<br>
+            <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>F</kbd> &nbsp; Search logs<br>
+            <kbd>Esc</kbd> &nbsp; Clear search<br>
+            <kbd>?</kbd> &nbsp; Toggle this help
+        `;
+        document.body.appendChild(helpTooltip);
+
+        // Toggle help with button click or ? key
+        let helpVisible = false;
+        const toggleHelp = () => {
+            helpVisible = !helpVisible;
+            helpTooltip.style.display = helpVisible ? 'block' : 'none';
+        };
+
+        helpButton.addEventListener('click', toggleHelp);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '?' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                toggleHelp();
+            }
+        });
+
+        toolbar.appendChild(helpButton);
     }
 })();

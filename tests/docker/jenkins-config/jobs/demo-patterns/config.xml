@@ -1,0 +1,204 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job">
+  <description>Comprehensive demo showcasing all log patterns supported by Log Parser extension</description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+    <script><![CDATA[
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                echo '[INFO] Compiling source code...'
+                echo '[DEBUG] Using Java 17 compiler'
+                echo '[INFO] BUILD SUCCESS'
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                echo '[INFO] Running unit tests...'
+                sh '''
+                    echo "Running com.example.UserServiceTest"
+                    echo "[INFO] Test: testUserCreation - PASSED"
+                    echo "[INFO] Test: testUserValidation - PASSED"
+                    echo "[INFO] Test: testUserDeletion - PASSED"
+                    echo "Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.842 s - in com.example.UserServiceTest"
+                '''
+
+                sh '''
+                    echo "Running com.example.OrderServiceTest"
+                    echo "[INFO] Test: testCreateOrder - PASSED"
+                    echo "[WARN] Test: testCancelOrder - Slow execution (2.3s)"
+                    echo "[INFO] Test: testOrderValidation - PASSED"
+                    echo "Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.451 s - in com.example.OrderServiceTest"
+                '''
+            }
+        }
+
+        stage('Integration Tests') {
+            steps {
+                echo '[INFO] ============================================'
+                echo 'Starting TestCase: DatabaseConnectionTest'
+                echo '[INFO] ============================================'
+                echo '[INFO] Connecting to test database'
+                echo '[DEBUG] Using PostgreSQL 15.2'
+                echo '[INFO] Running database migration tests'
+                echo '[INFO] 5 migrations applied successfully'
+                echo 'SUMMARY of TestCase [DatabaseConnectionTest]: PASSED'
+
+                echo ''
+                echo '[INFO] ============================================'
+                echo 'Starting TestCase: APIEndpointTest'
+                echo '[INFO] ============================================'
+                echo '[INFO] Testing REST API endpoints'
+                echo '[WARN] Deprecated API endpoint /v1/users used'
+                echo '[ERROR] Connection timeout on /v2/orders'
+                echo '[ERROR] Expected response in 5000ms, got timeout'
+                echo '[INFO] 8 endpoints tested, 1 failed'
+                echo 'SUMMARY of TestCase [APIEndpointTest]: ERROR'
+
+                echo ''
+                echo '[INFO] ============================================'
+                echo 'Starting TestCase: CacheIntegrationTest'
+                echo '[INFO] ============================================'
+                echo '[INFO] Testing Redis cache integration'
+                echo '[DEBUG] Cache hit ratio: 87%'
+                echo '[INFO] All cache operations successful'
+                echo 'SUMMARY of TestCase [CacheIntegrationTest]: PASSED'
+            }
+        }
+
+        stage('Deploy to Staging') {
+            steps {
+                script {
+                    echo '[INFO] Deploying application...'
+                    sh 'echo "+ kubectl apply -f deployment.yaml"'
+                    sh 'echo "deployment.apps/myapp created"'
+                    sh 'echo "+ kubectl apply -f service.yaml"'
+                    sh 'echo "service/myapp-service created"'
+                    sh 'echo "+ kubectl rollout status deployment/myapp"'
+                    sh 'echo "deployment \\"myapp\\" successfully rolled out"'
+                    echo '[INFO] Deployment successful'
+                }
+            }
+        }
+
+        stage('Performance Tests') {
+            steps {
+                echo 'Stage "Performance Tests" started'
+                echo '[INFO] Running load tests'
+                echo '[DEBUG] Simulating 100 concurrent users'
+                echo '[INFO] Average response time: 245ms'
+                echo '[WARN] Response time exceeded threshold on /api/search (850ms)'
+                echo '[INFO] Throughput: 400 requests/sec'
+                echo '[DEBUG] Memory usage: 512MB / 2GB'
+                echo 'Stage "Performance Tests" completed'
+            }
+        }
+
+        stage('Security Scan') {
+            steps {
+                echo '[INFO] Running security vulnerability scan'
+                sh '''
+                    echo "Test: testSQLInjectionPrevention"
+                    echo "[INFO] SQL injection tests passed"
+                    echo "Test: testXSSPrevention"
+                    echo "[INFO] XSS prevention tests passed"
+                    echo "Test: testAuthenticationBypass"
+                    echo "[INFO] Authentication bypass tests passed"
+                    echo "Test testAuthenticationBypass PASSED"
+                '''
+                echo '[INFO] No critical vulnerabilities found'
+                echo '[WARN] 2 medium severity issues detected'
+            }
+        }
+
+        stage('Code Quality') {
+            steps {
+                echo '[INFO] ============================================'
+                echo 'Starting TestCase: StaticAnalysis'
+                echo '[INFO] ============================================'
+                echo '[INFO] Running static code analysis'
+                echo '[DEBUG] SonarQube analysis started'
+                echo '[INFO] Code coverage: 78%'
+                echo '[WARN] Code duplication: 5.2% (threshold: 5%)'
+                echo '[WARN] 12 code smells detected'
+                echo '[DEBUG] Technical debt: 2h 30m'
+                echo '[INFO] Quality gate: PASSED'
+                echo 'SUMMARY of TestCase [StaticAnalysis]: PASSED'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                script {
+                    echo '[INFO] Building Docker image'
+                    sh 'echo "+ docker build -t myapp:latest ."'
+                    sh 'echo "Step 1/8 : FROM node:18-alpine"'
+                    sh 'echo "Step 2/8 : WORKDIR /app"'
+                    sh 'echo "Step 3/8 : COPY package*.json ./"'
+                    sh 'echo "Step 4/8 : RUN npm install"'
+                    sh 'echo "Step 5/8 : COPY . ."'
+                    sh 'echo "Step 6/8 : EXPOSE 3000"'
+                    sh 'echo "Step 7/8 : ENV NODE_ENV=production"'
+                    sh 'echo "Step 8/8 : CMD [\\"npm\\", \\"start\\"]"'
+                    sh 'echo "Successfully built a3b2c1d4e5f6"'
+                    sh 'echo "Successfully tagged myapp:latest"'
+                    sh 'echo "+ docker push myapp:latest"'
+                    sh 'echo "The push refers to repository [docker.io/library/myapp]"'
+                    sh 'echo "latest: digest: sha256:abc123... size: 1234"'
+                    echo '[INFO] Docker image pushed successfully'
+                }
+            }
+        }
+
+        stage('Notifications') {
+            steps {
+                echo '[INFO] ============================================'
+                echo 'Starting TestCase: SendNotifications'
+                echo '[INFO] ============================================'
+                echo '[DEBUG] Sending Slack notification'
+                echo '[INFO] Notification sent to #deployments'
+                echo '[DEBUG] Sending email notification'
+                echo '[INFO] Email sent to dev-team@example.com'
+                echo 'SUMMARY of TestCase [SendNotifications]: PASSED'
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                echo '[DEBUG] Removing temporary files'
+                echo '[DEBUG] Cleaning workspace'
+                echo '[INFO] Cleanup complete'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '[INFO] ============================================'
+            echo '[INFO] Pipeline completed successfully!'
+            echo '[INFO] ============================================'
+            echo '[INFO] Build duration: 3m 45s'
+            echo '[INFO] Total tests: 28 passed, 1 failed'
+            echo '[INFO] Deployment: SUCCESS'
+        }
+        failure {
+            echo '[ERROR] ============================================'
+            echo '[ERROR] Pipeline failed!'
+            echo '[ERROR] ============================================'
+        }
+        always {
+            echo '[INFO] Pipeline execution finished'
+        }
+    }
+}
+]]></script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

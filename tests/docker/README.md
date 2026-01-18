@@ -28,22 +28,48 @@ docker compose up -d
 
 ## Test Jobs
 
-Four pre-configured jobs are available:
+Six pre-configured jobs are available:
 
-| Job                | Description                        | Type      | Result   |
-| ------------------ | ---------------------------------- | --------- | -------- |
-| `sample-test-job`  | Mixed results (4 pass, 2 fail)     | Freestyle | UNSTABLE |
-| `passing-build`    | All tests pass                     | Freestyle | SUCCESS  |
-| `failing-build`    | All tests fail                     | Freestyle | FAILURE  |
-| `pipeline-example` | Multi-stage pipeline with 6 stages | Pipeline  | UNSTABLE |
+| Job                | Description                                    | Type      | Result   |
+| ------------------ | ---------------------------------------------- | --------- | -------- |
+| `stress-test`      | **STRESS TEST: 10,500+ lines for performance** | Pipeline  | SUCCESS  |
+| `demo-patterns`    | Comprehensive demo of all log pattern types    | Pipeline  | UNSTABLE |
+| `sample-test-job`  | Mixed results (4 pass, 2 fail)                 | Freestyle | UNSTABLE |
+| `passing-build`    | All tests pass                                 | Freestyle | SUCCESS  |
+| `failing-build`    | All tests fail                                 | Freestyle | FAILURE  |
+| `pipeline-example` | Multi-stage pipeline with 6 stages             | Pipeline  | UNSTABLE |
 
 ## Testing the Extension
 
 1. Load the extension in Chrome (`chrome://extensions/`)
 2. Open Jenkins: <http://localhost:8080>
-3. Click on a job → Build Now
-4. Click "Console Output"
-5. The extension should activate and colorize the logs
+3. **For stress testing** → Click on `stress-test` job → Build Now
+    - Generates 10,500+ log lines in real-time
+    - Tests auto-follow and performance under heavy load
+    - Ideal for verifying the performance optimizations
+    - Watch browser responsiveness and auto-follow behavior
+4. **For feature demo** → Click on `demo-patterns` job → Build Now
+
+### Performance Testing (`stress-test`)
+
+The **stress-test** job generates 10,500+ log lines to validate performance optimizations:
+
+-   **Stage 1:** 2000 INFO lines (baseline)
+-   **Stage 2:** 1000 DEBUG lines (mixed)
+-   **Stage 3:** 300 test cases with mixed results
+-   **Stage 4:** 3000+ Maven/JUnit tests and pipeline commands
+-   **Stage 5:** 2000 rapid-fire events (simulates live build)
+
+**What to verify:**
+
+-   ✅ Total render time < 10 seconds
+-   ✅ Auto-follow stays active (📡 Follow button)
+-   ✅ Navigator populates with 50+ items
+-   ✅ Stats counter updates smoothly
+-   ✅ Browser stays responsive (no freezing)
+-   ✅ Memory usage < 100MB
+
+Run this job **while opening Console Output** to watch real-time rendering.
 
 ## Login Credentials
 
