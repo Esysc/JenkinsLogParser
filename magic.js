@@ -24,8 +24,52 @@
         if (consoleOutput.classList.contains('log-parser-enhanced')) return;
         consoleOutput.classList.add('log-parser-enhanced');
 
-        const PRE_STRING = 'Starting TestCase:';
-        const POST_STRING = 'SUMMARY of TestCase [';
+        // Navigation patterns for detecting stages, steps, and test cases
+        const NAVIGATION_PATTERNS = [
+            // Test case patterns
+            {
+                start: /Starting TestCase:\s*(.+)$/i,
+                end: /SUMMARY of TestCase \[([^\]]+)\]:\s*(\w+)/i,
+                type: 'test',
+                icon: '🧪',
+            },
+            // Pipeline stage patterns
+            {
+                start: /^\[Pipeline\]\s+stage\s*\(?['"]?(.+?)['"]?\)?/i,
+                end: /^\[Pipeline\]\s+\/\s*stage/i,
+                type: 'stage',
+                icon: '📦',
+            },
+            {
+                start: /^Stage\s+['"]?(.+?)['"]?\s+started/i,
+                end: /^Stage\s+['"]?(.+?)['"]?\s+(completed|failed)/i,
+                type: 'stage',
+                icon: '📦',
+            },
+            { start: /^\[(.+?)\]\s+Stage/i, end: null, type: 'stage', icon: '📦' },
+            // Maven/Gradle test patterns
+            {
+                start: /^Running\s+(.+)$/i,
+                end: /^Tests run:\s*\d+.*?in\s+(.+)$/i,
+                type: 'test',
+                icon: '🧪',
+            },
+            // JUnit patterns
+            {
+                start: /^Test:\s+(.+)$/i,
+                end: /^Test\s+(.+?)\s+(PASSED|FAILED)/i,
+                type: 'test',
+                icon: '🧪',
+            },
+            // Generic step patterns
+            {
+                start: /^\[Pipeline\]\s+\{\s*\((.+?)\)/i,
+                end: /^\[Pipeline\]\s+\}/i,
+                type: 'step',
+                icon: '⚙️',
+            },
+            { start: /^\+\s+(.+)$/i, end: null, type: 'step', icon: '⚙️' },
+        ];
 
         const LOG_LEVELS = {
             ERROR: { color: '#F90636', priority: 1 },
@@ -38,6 +82,8 @@
         const stats = { ERROR: 0, WARN: 0, INFO: 0, DEBUG: 0, total: 0 };
         let testname = '';
         let href = '';
+        let currentNavType = null;
+        let currentNavIcon = null;
         let activeFilters = new Set(['ERROR', 'WARN', 'INFO', 'DEBUG', 'OTHER']);
         let processedLineCount = 0;
         let rawLogContent = '';
@@ -293,11 +339,11 @@
 
         toolbar.appendChild(actionBox);
 
-        // Test case navigator dropdown (integrated in toolbar)
+        // Navigation dropdown (integrated in toolbar)
         const dropdownBtn = createElement(
             'button',
-            { className: 'dropbtn action-btn', title: 'Navigate to parsed test cases' },
-            ['🗺️ Tests ▼']
+            { className: 'dropbtn action-btn', title: 'Navigate to stages, steps, and test cases' },
+            ['🗺️ Navigator ▼']
         );
         const dropdown = createElement('div', { className: 'dropdown toolbar-dropdown' });
         dropdown.appendChild(dropdownBtn);
@@ -513,16 +559,48 @@
             stats.total++;
 
             const escapedLine = escapeHtml(line);
-            const preIndex = line.indexOf(PRE_STRING);
-            const postIndex = line.indexOf(POST_STRING);
+
+            // Check for navigation markers (stages, steps, tests)
+            let navStart = null;
+            let navEnd = null;
+            for (const pattern of NAVIGATION_PATTERNS) {
+                const startMatch = line.match(pattern.start);
+                if (startMatch) {
+                    navStart = {
+                        pattern,
+                        name: startMatch[1] ? startMatch[1].trim() : line.trim(),
+                    };
+                    break;
+                }
+            }
+            if (!navStart && testname) {
+                // Check for end pattern
+                for (const pattern of NAVIGATION_PATTERNS) {
+                    if (pattern.end) {
+                        const endMatch = line.match(pattern.end);
+                        if (endMatch) {
+                            navEnd = {
+                                pattern,
+                                passed:
+                                    !line.includes('ERROR') &&
+                                    !line.includes('FAILED') &&
+                                    !line.includes('failed'),
+                            };
+                            break;
+                        }
+                    }
+                }
+            }
 
             const lineNum = String(index + 1).padStart(5, ' ');
 
             let lineId = 'line-' + index;
-            if (preIndex !== -1) {
-                testname = escapeHtml(line.substring(preIndex + PRE_STRING.length));
+            if (navStart) {
+                testname = escapeHtml(navStart.name);
                 href = '#test' + index;
                 lineId = 'test' + index;
+                currentNavType = navStart.pattern.type;
+                currentNavIcon = navStart.pattern.icon;
             }
 
             const lineEl = createElement('div', {
@@ -542,23 +620,29 @@
                 '</span>' +
                 '<button class="copy-line-btn" title="Copy line">📋</button>';
 
-            // Add to test case navigator if this is a summary line
-            if (postIndex !== -1) {
+            // Add to navigator if this is an end line
+            if (navEnd) {
                 // Remove empty message if present
                 const empty = uldropdown.querySelector('.dropdown-empty');
                 if (empty) empty.remove();
 
-                const menuColor = line.includes('ERROR') ? '#F90636' : '#2ACF1F';
+                const menuColor = navEnd.passed ? '#2ACF1F' : '#F90636';
+                const icon = currentNavIcon || '📍';
                 const menuBtn = createElement('button', {}, [
                     '<a href="' +
                         href +
-                        '"><span style="color:' +
+                        '">' +
+                        icon +
+                        ' <span style="color:' +
                         menuColor +
                         '">' +
                         testname +
                         '</span></a>',
                 ]);
                 uldropdown.appendChild(menuBtn);
+                testname = '';
+                currentNavType = null;
+                currentNavIcon = null;
             }
 
             // Apply current filter

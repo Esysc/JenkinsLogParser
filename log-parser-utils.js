@@ -11,8 +11,34 @@ const LogParserUtils = {
         DEBUG: { color: '#C906F9', priority: 4 },
     },
 
-    PRE_STRING: 'Starting TestCase:',
-    POST_STRING: 'SUMMARY of TestCase [',
+    // Navigation markers - patterns to detect stages/steps/test cases
+    NAVIGATION_PATTERNS: [
+        // Test case patterns
+        {
+            start: /Starting TestCase:\s*(.+)$/i,
+            end: /SUMMARY of TestCase \[([^\]]+)\]:\s*(\w+)/i,
+            type: 'test',
+        },
+        // Pipeline stage patterns
+        {
+            start: /^\[Pipeline\]\s+stage\s*\(?['"]?(.+?)['"]?\)?/i,
+            end: /^\[Pipeline\]\s+\/\s*stage/i,
+            type: 'stage',
+        },
+        {
+            start: /^Stage\s+['"]?(.+?)['"]?\s+started/i,
+            end: /^Stage\s+['"]?(.+?)['"]?\s+(completed|failed)/i,
+            type: 'stage',
+        },
+        { start: /^\[(.+?)\]\s+Stage/i, end: null, type: 'stage' },
+        // Maven/Gradle test patterns
+        { start: /^Running\s+(.+)$/i, end: /^Tests run:\s*\d+.*?in\s+(.+)$/i, type: 'test' },
+        // JUnit patterns
+        { start: /^Test:\s+(.+)$/i, end: /^Test\s+(.+?)\s+(PASSED|FAILED)/i, type: 'test' },
+        // Generic step patterns
+        { start: /^\[Pipeline\]\s+\{\s*\((.+?)\)/i, end: /^\[Pipeline\]\s+\}/i, type: 'step' },
+        { start: /^\+\s+(.+)$/i, end: null, type: 'step' },
+    ],
 
     /**
      * Escape HTML to prevent XSS
@@ -40,32 +66,74 @@ const LogParserUtils = {
     },
 
     /**
-     * Check if line is a test case start
+     * Check if line matches any start pattern
+     * @param {string} line - Log line
+     * @returns {{ matched: boolean, pattern: object, name: string }} - Match info
+     */
+    isNavigationStart(line) {
+        for (const pattern of this.NAVIGATION_PATTERNS) {
+            const match = line.match(pattern.start);
+            if (match) {
+                return {
+                    matched: true,
+                    pattern: pattern,
+                    name: match[1] ? match[1].trim() : line.trim(),
+                };
+            }
+        }
+        return { matched: false, pattern: null, name: '' };
+    },
+
+    /**
+     * Check if line is a test case start (legacy compatibility)
      * @param {string} line - Log line
      * @returns {boolean}
      */
     isTestCaseStart(line) {
-        return line.includes(this.PRE_STRING);
+        return this.isNavigationStart(line).matched;
     },
 
     /**
-     * Check if line is a test case summary
+     * Check if line matches any end pattern
+     * @param {string} line - Log line
+     * @param {object} activePattern - The pattern we're looking for an end to
+     * @returns {{ matched: boolean, passed: boolean, name: string }}
+     */
+    isNavigationEnd(line, activePattern) {
+        if (!activePattern || !activePattern.end) {
+            return { matched: false, passed: true, name: '' };
+        }
+        const match = line.match(activePattern.end);
+        if (match) {
+            const passed =
+                !line.includes('ERROR') && !line.includes('FAILED') && !line.includes('failed');
+            return {
+                matched: true,
+                passed: passed,
+                name: match[1] ? match[1].trim() : '',
+            };
+        }
+        return { matched: false, passed: true, name: '' };
+    },
+
+    /**
+     * Check if line is a test case summary (legacy compatibility)
      * @param {string} line - Log line
      * @returns {boolean}
      */
     isTestCaseSummary(line) {
-        return line.includes(this.POST_STRING);
+        const legacyPattern = this.NAVIGATION_PATTERNS[0];
+        return this.isNavigationEnd(line, legacyPattern).matched;
     },
 
     /**
-     * Extract test name from line
-     * @param {string} line - Log line containing test case start
-     * @returns {string} - Test name
+     * Extract test/stage/step name from line
+     * @param {string} line - Log line containing navigation marker
+     * @returns {string} - Name extracted
      */
     extractTestName(line) {
-        const index = line.indexOf(this.PRE_STRING);
-        if (index === -1) return '';
-        return line.substring(index + this.PRE_STRING.length).trim();
+        const result = this.isNavigationStart(line);
+        return result.matched ? result.name : '';
     },
 
     /**
@@ -93,21 +161,38 @@ const LogParserUtils = {
             stats[level] = (stats[level] || 0) + 1;
             stats.total++;
 
-            if (this.isTestCaseStart(line)) {
+            const startMatch = this.isNavigationStart(line);
+            if (startMatch.matched) {
+                // Close previous test if it didn't have an end marker
+                if (currentTest) {
+                    currentTest.endLine = index - 1;
+                    testCases.push(currentTest);
+                }
                 currentTest = {
-                    name: this.extractTestName(line),
+                    name: startMatch.name,
+                    type: startMatch.pattern.type,
                     startLine: index,
                     passed: null,
+                    pattern: startMatch.pattern,
                 };
             }
 
-            if (this.isTestCaseSummary(line) && currentTest) {
-                currentTest.endLine = index;
-                currentTest.passed = this.isTestPassed(line);
-                testCases.push(currentTest);
-                currentTest = null;
+            if (currentTest) {
+                const endMatch = this.isNavigationEnd(line, currentTest.pattern);
+                if (endMatch.matched) {
+                    currentTest.endLine = index;
+                    currentTest.passed = endMatch.passed;
+                    testCases.push(currentTest);
+                    currentTest = null;
+                }
             }
         });
+
+        // Close last test if it didn't have an end marker
+        if (currentTest) {
+            currentTest.endLine = lines.length - 1;
+            testCases.push(currentTest);
+        }
 
         return { stats, testCases, lines };
     },

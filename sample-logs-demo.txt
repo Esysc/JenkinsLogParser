@@ -1,0 +1,46 @@
+[INFO] Jenkins Pipeline Example - Multi-pattern Navigation
+[INFO] Build started at 2026-01-18 10:30:00
+
+[Pipeline] Start of Pipeline
+[Pipeline] stage ('Build')
+[INFO] Compiling source code...
+[INFO] BUILD SUCCESS
+[Pipeline] / stage
+
+[Pipeline] stage ('Unit Tests')
+Running com.example.UserServiceTest
+[INFO] Test: testUserCreation - PASSED
+[INFO] Test: testUserValidation - PASSED
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.234 s - in com.example.UserServiceTest
+[Pipeline] / stage
+
+[Pipeline] stage ('Integration Tests')
+Starting TestCase: DatabaseConnectionTest
+[INFO] Connecting to test database
+[INFO] Running database migration tests
+SUMMARY of TestCase [DatabaseConnectionTest]: PASSED
+
+Starting TestCase: APIEndpointTest
+[WARN] Deprecated API endpoint used
+[ERROR] Connection timeout
+SUMMARY of TestCase [APIEndpointTest]: ERROR
+[Pipeline] / stage
+
+[Pipeline] { (Deploy to Staging)
+[INFO] Deploying application...
++ kubectl apply -f deployment.yaml
+[INFO] Deployment successful
+[Pipeline] }
+
+Stage "Performance Tests" started
+[INFO] Running load tests
+[WARN] Response time exceeded threshold
+Stage "Performance Tests" completed
+
+[Pipeline] stage ('Cleanup')
+[DEBUG] Removing temporary files
+[INFO] Cleanup complete
+[Pipeline] / stage
+
+[Pipeline] End of Pipeline
+[INFO] Build finished: SUCCESS
