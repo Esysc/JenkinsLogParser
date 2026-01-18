@@ -1106,6 +1106,9 @@
             <kbd>Alt</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd> &nbsp; Navigate stages/errors<br>
             <kbd>Alt</kbd> + <kbd>←</kbd> / <kbd>→</kbd> &nbsp; Collapse/Expand sections<br>
             <kbd>Alt</kbd> + <kbd>Home</kbd> / <kbd>End</kbd> &nbsp; Jump to first/last<br>
+            Click line &nbsp; Toggle selection<br>
+            <kbd>Shift</kbd> + Click &nbsp; Select range of lines<br>
+            Copy selected button &nbsp; Copy all selected lines<br>
             <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>F</kbd> &nbsp; Search logs<br>
             <kbd>Esc</kbd> &nbsp; Clear search<br>
             <kbd>?</kbd> &nbsp; Toggle this help
