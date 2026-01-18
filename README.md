@@ -105,6 +105,16 @@ npm run test:coverage
 
 For end-to-end testing with a real Jenkins instance, see [tests/docker/README.md](tests/docker/README.md).
 
+The Docker setup includes a `demo-patterns` pipeline job that showcases all supported log pattern types:
+
+-   Pipeline stages (`[Pipeline] stage`)
+-   Test cases (original `Starting TestCase:` format)
+-   Maven/Gradle tests (`Running com.example.Test`)
+-   JUnit tests (`Test: testName`)
+-   Shell commands (`+ kubectl apply`)
+
+This is a great way to see all features in action before deploying the extension.
+
 ## Notes
 
 -   Uses **Manifest V3** (Chrome's latest extension format)
