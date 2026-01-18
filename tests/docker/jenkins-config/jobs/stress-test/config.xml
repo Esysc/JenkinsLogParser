@@ -8,10 +8,6 @@
 pipeline {
     agent any
 
-    options {
-        timestamps()
-    }
-
     stages {
         stage('Generate Large Build Log') {
             steps {

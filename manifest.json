@@ -15,12 +15,12 @@
             "js": ["magic.js"],
             "run_at": "document_idle",
             "matches": [
-                "http://*/*/console*",
-                "https://*/*/console*",
-                "http://*/*/consoleFull*",
-                "https://*/*/consoleFull*",
-                "http://*/*/flowGraphTable/*",
-                "https://*/*/flowGraphTable/*",
+                "http://*/job/*/console*",
+                "https://*/job/*/console*",
+                "http://*/job/*/consoleFull*",
+                "https://*/job/*/consoleFull*",
+                "http://*/job/*/flowGraphTable/*",
+                "https://*/job/*/flowGraphTable/*",
                 "http://*/job/*/log*",
                 "https://*/job/*/log*"
             ]
