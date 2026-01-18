@@ -95,9 +95,11 @@
         let rawFullLogLinkAppended = false;
         let isStreamingFullLog = false;
         const SCROLL_THRESHOLD_PX = 150;
-        const BASE_CHUNK_SIZE = 200;
-        const MAX_RENDER_SLICE_MS = 12;
+        const BASE_CHUNK_SIZE = 500;
+        const MAX_RENDER_SLICE_MS = 50;
+        const STATS_UPDATE_THROTTLE_MS = 200;
         let pendingRenderQueue = [];
+        let lastStatsUpdate = 0;
         let chunkRenderScheduled = false;
         let pendingAutoScroll = false;
         let observer = null;
@@ -139,9 +141,12 @@
         }
 
         function scrollToBottom(forceInstant = false) {
+            // Use instant scroll for better performance with large logs
+            const behavior =
+                forceInstant || parsedOutput.childElementCount > 5000 ? 'auto' : 'smooth';
             globalThis.scrollTo({
                 top: document.documentElement.scrollHeight,
-                behavior: forceInstant ? 'auto' : 'smooth',
+                behavior: behavior,
             });
         }
 
@@ -186,10 +191,19 @@
 
             if (fragment.childNodes.length) {
                 parsedOutput.appendChild(fragment);
-                updateStats();
 
-                if (pendingAutoScroll && autoFollowEnabled) {
-                    scrollToBottom();
+                // Throttle stats updates to reduce reflows
+                const now = performance.now();
+                if (
+                    now - lastStatsUpdate > STATS_UPDATE_THROTTLE_MS ||
+                    pendingRenderQueue.length === 0
+                ) {
+                    updateStats();
+                    lastStatsUpdate = now;
+                }
+
+                if (pendingAutoScroll && autoFollowEnabled && pendingRenderQueue.length === 0) {
+                    scrollToBottom(true); // Force instant scroll for better performance
                 }
             }
 
@@ -561,32 +575,42 @@
             const escapedLine = escapeHtml(line);
 
             // Check for navigation markers (stages, steps, tests)
+            // Only process navigation if line contains potential markers (performance optimization)
             let navStart = null;
             let navEnd = null;
-            for (const pattern of NAVIGATION_PATTERNS) {
-                const startMatch = line.match(pattern.start);
-                if (startMatch) {
-                    navStart = {
-                        pattern,
-                        name: startMatch[1] ? startMatch[1].trim() : line.trim(),
-                    };
-                    break;
-                }
-            }
-            if (!navStart && testname) {
-                // Check for end pattern
+            const hasMarkers =
+                line.includes('[') ||
+                line.includes('Test') ||
+                line.includes('Stage') ||
+                line.includes('Running') ||
+                line.includes('SUMMARY');
+
+            if (hasMarkers) {
                 for (const pattern of NAVIGATION_PATTERNS) {
-                    if (pattern.end) {
-                        const endMatch = line.match(pattern.end);
-                        if (endMatch) {
-                            navEnd = {
-                                pattern,
-                                passed:
-                                    !line.includes('ERROR') &&
-                                    !line.includes('FAILED') &&
-                                    !line.includes('failed'),
-                            };
-                            break;
+                    const startMatch = line.match(pattern.start);
+                    if (startMatch) {
+                        navStart = {
+                            pattern,
+                            name: startMatch[1] ? startMatch[1].trim() : line.trim(),
+                        };
+                        break;
+                    }
+                }
+                if (!navStart && testname) {
+                    // Check for end pattern
+                    for (const pattern of NAVIGATION_PATTERNS) {
+                        if (pattern.end) {
+                            const endMatch = line.match(pattern.end);
+                            if (endMatch) {
+                                navEnd = {
+                                    pattern,
+                                    passed:
+                                        !line.includes('ERROR') &&
+                                        !line.includes('FAILED') &&
+                                        !line.includes('failed'),
+                                };
+                                break;
+                            }
                         }
                     }
                 }
@@ -691,29 +715,48 @@
             subtree: true,
         };
 
+        let mutationDebounceTimer = null;
         observer = new MutationObserver((mutations) => {
             if (isStreamingFullLog) return;
-            let hasChanges = false;
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                    hasChanges = true;
-                }
-            });
-            if (hasChanges) {
-                processNewLines();
+
+            // Debounce rapid mutations to avoid excessive processing
+            if (mutationDebounceTimer) {
+                clearTimeout(mutationDebounceTimer);
             }
+
+            mutationDebounceTimer = setTimeout(() => {
+                let hasChanges = false;
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                        hasChanges = true;
+                    }
+                });
+                if (hasChanges) {
+                    processNewLines();
+                }
+                mutationDebounceTimer = null;
+            }, 100);
         });
 
         observer.observe(consoleOutput, observerConfig);
 
         // Also poll for changes (backup for some Jenkins setups)
+        // Dynamically adjust poll rate based on log size for better performance
+        let pollRate = 1000;
         pollInterval = setInterval(() => {
             if (isStreamingFullLog) return;
             const currentContent = consoleOutput.textContent;
             if (currentContent !== rawLogContent) {
                 processNewLines();
+                // Reduce polling frequency for very large logs
+                const lineCount = parsedOutput.childElementCount;
+                if (lineCount > 10000 && pollRate === 1000) {
+                    clearInterval(pollInterval);
+                    pollRate = 2000;
+                    pollInterval = setInterval(arguments.callee, pollRate);
+                }
             }
-        }, 1000);
+        }, pollRate);
 
         // Check if build is complete (live indicator)
         function checkBuildStatus() {
