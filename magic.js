@@ -282,6 +282,35 @@
         // Action buttons
         const actionBox = createElement('div', { className: 'log-actions' });
 
+        // Multi-copy button
+        const selectedLines = new Set();
+        const copySelectedBtn = createElement(
+            'button',
+            { className: 'action-btn', title: 'Copy all selected lines', disabled: true },
+            ['📑 Copy selected (0)']
+        );
+        const updateCopySelectedState = () => {
+            copySelectedBtn.textContent = '📑 Copy selected (' + selectedLines.size + ')';
+            copySelectedBtn.disabled = selectedLines.size === 0;
+        };
+        copySelectedBtn.addEventListener('click', () => {
+            if (!selectedLines.size) return;
+            const ordered = Array.from(selectedLines).sort(
+                (a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top
+            );
+            const text = ordered
+                .map((el) => el.querySelector('.log-content').textContent)
+                .join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                const prev = copySelectedBtn.textContent;
+                copySelectedBtn.textContent = '✅ Copied (' + selectedLines.size + ')';
+                setTimeout(() => {
+                    copySelectedBtn.textContent = prev;
+                }, 1500);
+            });
+        });
+        actionBox.appendChild(copySelectedBtn);
+
         // Live indicator
         const liveIndicator = createElement(
             'span',
@@ -625,6 +654,7 @@
             });
 
             lineEl.innerHTML =
+                '<input type="checkbox" class="select-line-checkbox" title="Select line" />' +
                 '<span class="log-line-num">' +
                 lineNum +
                 '</span>' +
@@ -907,10 +937,12 @@
             }
         }
 
-        // Copy line functionality
+        // Copy + multi-select functionality
         parsedOutput.addEventListener('click', (e) => {
+            const line = e.target.closest('.log-line');
+
+            // Individual copy
             if (e.target.classList.contains('copy-line-btn')) {
-                const line = e.target.closest('.log-line');
                 const content = line.querySelector('.log-content').textContent;
                 navigator.clipboard.writeText(content).then(() => {
                     e.target.textContent = '✅';
@@ -918,6 +950,36 @@
                         e.target.textContent = '📋';
                     }, 1500);
                 });
+                return;
+            }
+
+            // Checkbox selection
+            if (e.target.classList.contains('select-line-checkbox')) {
+                const checked = e.target.checked;
+                if (checked) {
+                    selectedLines.add(line);
+                    line.classList.add('selected');
+                } else {
+                    selectedLines.delete(line);
+                    line.classList.remove('selected');
+                }
+                updateCopySelectedState();
+                return;
+            }
+
+            // Ctrl/Cmd+Click to toggle selection
+            if (line && (e.metaKey || e.ctrlKey)) {
+                const checkbox = line.querySelector('.select-line-checkbox');
+                const now = !checkbox.checked;
+                checkbox.checked = now;
+                if (now) {
+                    selectedLines.add(line);
+                    line.classList.add('selected');
+                } else {
+                    selectedLines.delete(line);
+                    line.classList.remove('selected');
+                }
+                updateCopySelectedState();
             }
         });
 
