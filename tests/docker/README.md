@@ -28,42 +28,48 @@ docker compose up -d
 
 ## Test Jobs
 
-Five pre-configured jobs are available:
+Six pre-configured jobs are available:
 
-| Job                | Description                                     | Type      | Result   |
-| ------------------ | ----------------------------------------------- | --------- | -------- |
-| `demo-patterns`    | **Comprehensive demo of all log pattern types** | Pipeline  | UNSTABLE |
-| `sample-test-job`  | Mixed results (4 pass, 2 fail)                  | Freestyle | UNSTABLE |
-| `passing-build`    | All tests pass                                  | Freestyle | SUCCESS  |
-| `failing-build`    | All tests fail                                  | Freestyle | FAILURE  |
-| `pipeline-example` | Multi-stage pipeline with 6 stages              | Pipeline  | UNSTABLE |
+| Job                | Description                                    | Type      | Result   |
+| ------------------ | ---------------------------------------------- | --------- | -------- |
+| `stress-test`      | **STRESS TEST: 10,500+ lines for performance** | Pipeline  | SUCCESS  |
+| `demo-patterns`    | Comprehensive demo of all log pattern types    | Pipeline  | UNSTABLE |
+| `sample-test-job`  | Mixed results (4 pass, 2 fail)                 | Freestyle | UNSTABLE |
+| `passing-build`    | All tests pass                                 | Freestyle | SUCCESS  |
+| `failing-build`    | All tests fail                                 | Freestyle | FAILURE  |
+| `pipeline-example` | Multi-stage pipeline with 6 stages             | Pipeline  | UNSTABLE |
 
 ## Testing the Extension
 
 1. Load the extension in Chrome (`chrome://extensions/`)
 2. Open Jenkins: <http://localhost:8080>
-3. **Recommended:** Click on `demo-patterns` job → Build Now
-    - This job showcases all pattern types: Pipeline stages, test cases, Maven tests, JUnit tests, shell commands
-    - Open "Console Output" to see the Log Parser extension in action
-4. Try other jobs for specific scenarios
-5. The extension should activate and colorize the logs with enhanced navigation
+3. **For stress testing** → Click on `stress-test` job → Build Now
+    - Generates 10,500+ log lines in real-time
+    - Tests auto-follow and performance under heavy load
+    - Ideal for verifying the performance optimizations
+    - Watch browser responsiveness and auto-follow behavior
+4. **For feature demo** → Click on `demo-patterns` job → Build Now
 
-### What to Test in `demo-patterns`
+### Performance Testing (`stress-test`)
 
-The **Navigator dropdown** should show ~15 items with different icons:
+The **stress-test** job generates 10,500+ log lines to validate performance optimizations:
 
--   📦 Pipeline stages (Build, Unit Tests, Integration Tests, etc.)
--   🧪 Test cases (DatabaseConnectionTest, APIEndpointTest, etc.)
--   🧪 Maven/Gradle tests (com.example.UserServiceTest, etc.)
--   🧪 JUnit tests (testSQLInjectionPrevention, etc.)
--   ⚙️ Shell commands (kubectl apply, docker build, etc.)
+-   **Stage 1:** 2000 INFO lines (baseline)
+-   **Stage 2:** 1000 DEBUG lines (mixed)
+-   **Stage 3:** 300 test cases with mixed results
+-   **Stage 4:** 3000+ Maven/JUnit tests and pipeline commands
+-   **Stage 5:** 2000 rapid-fire events (simulates live build)
 
-Other features to verify:
+**What to verify:**
 
--   **Stats summary** showing ERROR/WARN/INFO/DEBUG counts
--   **Search functionality** with real-time highlighting
--   **Auto-follow** keeping up with live builds
--   **Performance** should remain smooth (~150 log lines)
+-   ✅ Total render time < 10 seconds
+-   ✅ Auto-follow stays active (📡 Follow button)
+-   ✅ Navigator populates with 50+ items
+-   ✅ Stats counter updates smoothly
+-   ✅ Browser stays responsive (no freezing)
+-   ✅ Memory usage < 100MB
+
+Run this job **while opening Console Output** to watch real-time rendering.
 
 ## Login Credentials
 
