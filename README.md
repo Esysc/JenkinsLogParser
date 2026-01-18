@@ -125,6 +125,13 @@ This is a great way to see all features in action before deploying the extension
 
 ## Changelog
 
+### v0.4.0 - 2026-01-18
+
+-   Added multi-line selection with Shift-click ranges and a "Copy selected" action; shortcuts help now documents the new workflow.
+-   UI polish: solid gradient toolbar, lighter log container, pill-style filters/actions, slimmer scrollbar, and pill live indicator.
+-   Logs now stay inside a dedicated scrollable container so the toolbar never overlaps; initial parsing shows a spinner.
+-   Removed the raw `consoleText` fallback link while keeping the safe full-log loader.
+
 ### v0.3.2 - 2026-01-05
 
 -   Added coverage for Jenkins `/job/*/log` endpoints so the parser loads on direct log views.
