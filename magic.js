@@ -244,6 +244,13 @@
         // Create toolbar first (before processing any lines)
         const toolbar = createElement('div', { className: 'log-parser-toolbar' });
 
+        // Add loading spinner
+        const spinner = createElement('div', { className: 'log-spinner' }, [
+            '<div class="spinner-icon"></div>',
+            '<span class="spinner-text">Processing logs...</span>',
+        ]);
+        toolbar.appendChild(spinner);
+
         // Stats summary (will be updated dynamically)
         const statsSummary = createElement('div', { className: 'log-stats', id: 'log-stats' });
         toolbar.appendChild(statsSummary);
@@ -707,6 +714,11 @@
 
         // Initial processing
         processNewLines();
+
+        // Hide spinner after initial load
+        setTimeout(() => {
+            spinner.style.display = 'none';
+        }, 500);
 
         // Set up MutationObserver for live updates
         const observerConfig = {
