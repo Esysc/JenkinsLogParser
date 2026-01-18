@@ -284,6 +284,7 @@
 
         // Multi-copy button
         const selectedLines = new Set();
+        let lastSelectedLine = null;
         const copySelectedBtn = createElement(
             'button',
             { className: 'action-btn', title: 'Copy all selected lines', disabled: true },
@@ -292,6 +293,25 @@
         const updateCopySelectedState = () => {
             copySelectedBtn.textContent = '📑 Copy selected (' + selectedLines.size + ')';
             copySelectedBtn.disabled = selectedLines.size === 0;
+        };
+
+        const setLineSelection = (line, selected) => {
+            const checkbox = line.querySelector('.select-line-checkbox');
+            if (checkbox) {
+                checkbox.checked = selected;
+            }
+            if (selected) {
+                selectedLines.add(line);
+                line.classList.add('selected');
+            } else {
+                selectedLines.delete(line);
+                line.classList.remove('selected');
+            }
+            updateCopySelectedState();
+        };
+
+        const toggleLineSelection = (line) => {
+            setLineSelection(line, !selectedLines.has(line));
         };
         copySelectedBtn.addEventListener('click', () => {
             if (!selectedLines.size) return;
@@ -955,31 +975,27 @@
 
             // Checkbox selection
             if (e.target.classList.contains('select-line-checkbox')) {
-                const checked = e.target.checked;
-                if (checked) {
-                    selectedLines.add(line);
-                    line.classList.add('selected');
-                } else {
-                    selectedLines.delete(line);
-                    line.classList.remove('selected');
-                }
-                updateCopySelectedState();
+                setLineSelection(line, e.target.checked);
+                lastSelectedLine = line;
                 return;
             }
 
-            // Ctrl/Cmd+Click to toggle selection
-            if (line && (e.metaKey || e.ctrlKey)) {
-                const checkbox = line.querySelector('.select-line-checkbox');
-                const now = !checkbox.checked;
-                checkbox.checked = now;
-                if (now) {
-                    selectedLines.add(line);
-                    line.classList.add('selected');
+            // Click anywhere on line toggles selection; Shift+click selects range
+            if (line && !e.target.closest('.copy-line-btn')) {
+                if (e.shiftKey && lastSelectedLine) {
+                    const lines = Array.from(parsedOutput.querySelectorAll('.log-line'));
+                    const start = lines.indexOf(lastSelectedLine);
+                    const end = lines.indexOf(line);
+                    if (start !== -1 && end !== -1) {
+                        const [s, eIdx] = start < end ? [start, end] : [end, start];
+                        for (let i = s; i <= eIdx; i++) {
+                            setLineSelection(lines[i], true);
+                        }
+                    }
                 } else {
-                    selectedLines.delete(line);
-                    line.classList.remove('selected');
+                    toggleLineSelection(line);
                 }
-                updateCopySelectedState();
+                lastSelectedLine = line;
             }
         });
 
