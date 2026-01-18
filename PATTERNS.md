@@ -95,12 +95,10 @@ NAVIGATION_PATTERNS: [
 
 ### Pattern Properties
 
-- **start** (required): Regex to match the beginning of a navigable section
-  - Capture group 1 should contain the name/title
-- **end** (optional): Regex to match the end of a section
-  - If null, only the start line is detected
-- **type**: Classification of the pattern (`'test'`, `'stage'`, `'step'`)
-- **icon**: Emoji icon displayed in the navigator dropdown
+-   **start** (required): Regex to match the beginning of a navigable section. Capture group 1 should contain the name/title
+-   **end** (optional): Regex to match the end of a section. If null, only the start line is detected
+-   **type**: Classification of the pattern (`'test'`, `'stage'`, `'step'`)
+-   **icon**: Emoji icon displayed in the navigator dropdown
 
 ## Status Detection
 
