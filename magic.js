@@ -940,6 +940,105 @@
                 searchInput.dispatchEvent(new Event('input'));
                 searchInput.blur();
             }
+
+            // Arrow key navigation with Alt modifier
+            if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                const navigationItems = Array.from(uldropdown.querySelectorAll('button a'));
+                const errorLines = Array.from(
+                    parsedOutput.querySelectorAll('.log-line[data-level="ERROR"]')
+                );
+                const allNavigableLines = [
+                    ...Array.from(parsedOutput.querySelectorAll('.log-line[id^="test"]')),
+                    ...errorLines,
+                ].sort((a, b) => {
+                    const aTop = a.getBoundingClientRect().top;
+                    const bTop = b.getBoundingClientRect().top;
+                    return aTop - bTop;
+                });
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    // Jump to next stage/error
+                    const currentScroll = window.scrollY;
+                    const nextItem = allNavigableLines.find((line) => {
+                        const rect = line.getBoundingClientRect();
+                        return rect.top > 100; // Find next item below current viewport
+                    });
+                    if (nextItem) {
+                        nextItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        nextItem.classList.add('highlight-flash');
+                        setTimeout(() => nextItem.classList.remove('highlight-flash'), 2000);
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    // Jump to previous stage/error
+                    const currentScroll = window.scrollY;
+                    const prevItem = allNavigableLines.reverse().find((line) => {
+                        const rect = line.getBoundingClientRect();
+                        return rect.bottom < window.innerHeight - 100;
+                    });
+                    if (prevItem) {
+                        prevItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        prevItem.classList.add('highlight-flash');
+                        setTimeout(() => prevItem.classList.remove('highlight-flash'), 2000);
+                    }
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    // Collapse (hide DEBUG and INFO)
+                    toggleCollapseAll(true);
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    // Expand (show all)
+                    toggleCollapseAll(false);
+                } else if (e.key === 'Home') {
+                    e.preventDefault();
+                    // Jump to first stage/error
+                    if (allNavigableLines.length > 0) {
+                        const firstItem = allNavigableLines[0];
+                        firstItem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        firstItem.classList.add('highlight-flash');
+                        setTimeout(() => firstItem.classList.remove('highlight-flash'), 2000);
+                    }
+                } else if (e.key === 'End') {
+                    e.preventDefault();
+                    // Jump to last stage/error
+                    if (allNavigableLines.length > 0) {
+                        const lastItem = allNavigableLines[allNavigableLines.length - 1];
+                        lastItem.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        lastItem.classList.add('highlight-flash');
+                        setTimeout(() => lastItem.classList.remove('highlight-flash'), 2000);
+                    }
+                }
+            }
+        });
+
+        // Add keyboard shortcuts help tooltip
+        const helpTooltip = createElement(
+            'div',
+            {
+                className: 'keyboard-help-tooltip',
+                title: 'Keyboard Shortcuts',
+                style: 'display:none;',
+            },
+            [
+                '⌨️ Shortcuts:\n' +
+                    'Alt + ↑/↓: Navigate stages/errors\n' +
+                    'Alt + ←/→: Collapse/Expand\n' +
+                    'Alt + Home/End: First/Last\n' +
+                    'Ctrl/Cmd + F: Search\n' +
+                    'Esc: Clear search',
+            ]
+        );
+        toolbar.appendChild(helpTooltip);
+
+        // Show help on hover or ? key
+        let helpVisible = false;
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '?' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                helpVisible = !helpVisible;
+                helpTooltip.style.display = helpVisible ? 'block' : 'none';
+            }
         });
     }
 })();

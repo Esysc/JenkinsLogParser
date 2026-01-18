@@ -1341,3 +1341,44 @@ span.thirdTs {
         padding: 5px 8px;
     }
 }
+
+/* Keyboard Help Tooltip */
+.keyboard-help-tooltip {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: rgba(26, 26, 46, 0.98);
+    border: 2px solid #4a9eff;
+    border-radius: 8px;
+    padding: 15px 20px;
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.8;
+    white-space: pre;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 4px 20px rgba(74, 158, 255, 0.3);
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.keyboard-help-tooltip::before {
+    content: '⌨️ KEYBOARD SHORTCUTS';
+    display: block;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(74, 158, 255, 0.3);
+    color: #4a9eff;
+}
