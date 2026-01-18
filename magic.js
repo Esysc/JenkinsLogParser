@@ -92,7 +92,6 @@
         let fullLogBtn = null;
         let fullLogUrl = '';
         let rawLogUrl = '';
-        let rawFullLogLinkAppended = false;
         let isStreamingFullLog = false;
         const SCROLL_THRESHOLD_PX = 150;
         const BASE_CHUNK_SIZE = 500;
@@ -445,22 +444,6 @@
 
             fullLogBtn.style.display = '';
             fullLogBtn.disabled = false;
-
-            if (!rawFullLogLinkAppended) {
-                const fallbackLink = createElement(
-                    'a',
-                    {
-                        href: rawLogUrl || fullLogUrl,
-                        target: '_blank',
-                        rel: 'noopener noreferrer',
-                        className: 'full-log-native-link',
-                    },
-                    ['Raw consoleText ↗']
-                );
-                fallbackLink.style.marginLeft = '8px';
-                actionBox.appendChild(fallbackLink);
-                rawFullLogLinkAppended = true;
-            }
         }
 
         function prepareFullLogLoad() {
