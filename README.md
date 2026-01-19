@@ -5,6 +5,23 @@
 
 A Chrome extension to parse Jenkins console logs with enhanced readability.
 
+<details>
+<summary>📸 Screenshots</summary>
+
+## Main Interface
+
+![Main Interface](screenshots/main.jpg)
+
+## Navigator
+
+![Navigator](screenshots/navigator.jpg)
+
+## Keyboard Shortcuts
+
+![Keyboard Shortcuts](screenshots/shortcuts.jpg)
+
+</details>
+
 ## Features
 
 ### 🎨 Log Colorization
