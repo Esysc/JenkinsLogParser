@@ -46,6 +46,7 @@ zip -r "$ZIP_FILE" \
     magic.js \
     style.css \
     icons/ \
+    screenshots/ \
     LICENSE \
     README.md \
     -x "*.DS_Store" \
